@@ -1,0 +1,94 @@
+{% extends "core/base.html" %}
+
+{% block title %}LearnLab – Login{% endblock %}
+{% block body_class %}page-auth{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    <div class="auth-panel auth-panel-left">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <div class="auth-logo-circle">
+                    <span class="auth-logo-hat">🎓</span>
+                </div>
+                <div class="auth-brand-text">
+                    <span class="auth-brand-title">LearnLab</span>
+                    <span class="auth-brand-subtitle">Learning Management Portal</span>
+                </div>
+            </div>
+
+            <div class="auth-heading">
+                <h1>Welcome Back</h1>
+                <p>Sign in to access your classes, tasks, and grades.</p>
+            </div>
+
+            {% if messages %}
+                <div class="auth-messages">
+                    {% for message in messages %}
+                        <div class="auth-message auth-message-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+
+                <div class="form-field">
+                    <label for="{{ form.email.id_for_label }}">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="field-error">
+                            {{ form.email.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <div class="field-error">
+                            {{ form.password.errors|striptags }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <span>Sign In</span>
+                    <span class="btn-icon">→</span>
+                </button>
+            </form>
+
+            <div class="auth-footer-links">
+                {% if not is_admin_login %}
+                    <a href="{% url 'admin_login' %}" class="admin-login-link">
+                        Administrator Login
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="admin-login-link">
+                        Back to Teacher / Student Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-panel auth-panel-right">
+        <div class="promo-card">
+            <h2>Empower Your Learning Journey</h2>
+            <p>
+                A connected space for teachers and students to collaborate,
+                submit projects, and track progress – all in one modern dashboard.
+            </p>
+            <ul class="promo-list">
+                <li><span class="dot"></span>Real-time feedback and grading</li>
+                <li><span class="dot"></span>Organized course content and tasks</li>
+                <li><span class="dot"></span>Personal portfolio of student work</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

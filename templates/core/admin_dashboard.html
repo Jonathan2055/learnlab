@@ -1,0 +1,131 @@
+{% extends "core/base.html" %}
+
+{% block title %}Admin Dashboard – LearnLab{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'admin_dashboard' %}" class="sidebar-link sidebar-link-active">
+                Users
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p>Manage teachers and students for your institution.</p>
+            </div>
+        </header>
+
+        {% if messages %}
+            <div class="dashboard-messages">
+                {% for message in messages %}
+                    <div class="dashboard-message dashboard-message-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="card-grid">
+            <section class="card">
+                <h2>Create User</h2>
+                <p class="card-subtitle">
+                    Add new Teachers or Students with a single form.
+                </p>
+                <form method="post" class="stacked-form">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="{{ form.username.id_for_label }}">Username</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="field-error">{{ form.username.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-field">
+                            <label for="{{ form.email.id_for_label }}">Email</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="field-error">{{ form.email.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="{{ form.role.id_for_label }}">Role</label>
+                            {{ form.role }}
+                            {% if form.role.errors %}
+                                <div class="field-error">{{ form.role.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="{{ form.password1.id_for_label }}">Password</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="field-error">{{ form.password1.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-field">
+                            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="field-error">{{ form.password2.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>Existing Users</h2>
+                <p class="card-subtitle">
+                    Quick overview of all non-admin accounts.
+                </p>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for u in users %}
+                            <tr>
+                                <td>{{ u.username }}</td>
+                                <td>{{ u.email }}</td>
+                                <td>{{ u.get_role_display }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-muted">
+                                    No users created yet.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+{% endblock %}
+
