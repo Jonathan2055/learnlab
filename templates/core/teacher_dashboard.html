@@ -4,12 +4,49 @@
 {% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
 
 {% block content %}
-<div class="dashboard-placeholder">
-    <div class="dashboard-placeholder-card">
-        <h1>Teacher Dashboard</h1>
-        <p>This is a placeholder. We will add course management, materials, and task assignment features next.</p>
-        <a href="{% url 'logout' %}" class="btn btn-secondary">Log out</a>
-    </div>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link sidebar-link-active">My Classes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <h1>Teacher Dashboard</h1>
+            <p>Manage your classes, materials, tasks, and submissions.</p>
+        </header>
+
+        {% if messages %}
+            <div class="dashboard-messages">
+                {% for message in messages %}
+                    <div class="dashboard-message dashboard-message-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="card">
+            <h2>My Classes</h2>
+            <p class="card-subtitle">Classes assigned to you.</p>
+            <div class="class-grid">
+                {% for course in courses %}
+                    <a href="{% url 'teacher_class_detail' course.pk %}" class="class-card">
+                        <h3>{{ course.name }}</h3>
+                        <p>{{ course.tasks.count }} tasks · {{ course.students.count }} students</p>
+                    </a>
+                {% empty %}
+                    <p class="text-muted">No classes assigned yet. Contact an administrator.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
 </div>
 {% endblock %}
-

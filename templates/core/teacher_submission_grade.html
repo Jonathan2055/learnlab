@@ -1,0 +1,64 @@
+{% extends "core/base.html" %}
+
+{% block title %}Feedback – {{ submission.task.title }}{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
+            <a href="{% url 'teacher_class_detail' submission.task.course.pk %}" class="sidebar-link">{{ submission.task.course.name }}</a>
+            <a href="{% url 'teacher_task_detail' submission.task.pk %}" class="sidebar-link sidebar-link-active">{{ submission.task.title }}</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'teacher_task_detail' submission.task.pk %}" class="back-link">← Back to Task</a>
+            <h1>Feedback & Grade</h1>
+            <p>Submission by {{ submission.submitted_by.username }}{% if submission.group %} (Group: {{ submission.group.name }}){% endif %} on {{ submission.submitted_at|date:"M j, Y H:i" }}</p>
+        </header>
+
+        {% if submission.content %}
+            <section class="card">
+                <h2>Content</h2>
+                <pre class="submission-content">{{ submission.content }}</pre>
+            </section>
+        {% endif %}
+        {% if submission.file %}
+            <section class="card">
+                <h2>File</h2>
+                <a href="{{ submission.file.url }}" target="_blank" rel="noopener" class="btn btn-secondary">Download file</a>
+            </section>
+        {% endif %}
+
+        <section class="card" style="margin-top: 1.6rem; max-width: 560px;">
+            <h2>Feedback & Grade</h2>
+            <form method="post" class="stacked-form">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="{{ form.feedback.id_for_label }}">Feedback</label>
+                    {{ form.feedback }}
+                </div>
+                {% if submission.task.is_graded %}
+                <div class="form-field">
+                    <label for="{{ form.grade.id_for_label }}">Grade</label>
+                    {{ form.grade }}
+                    {% if form.grade.errors %}<div class="field-error">{{ form.grade.errors|striptags }}</div>{% endif %}
+                </div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">Save Feedback</button>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

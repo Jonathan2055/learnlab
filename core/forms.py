@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
+from .models import Course, LearningMaterial, Task, TaskGroup, TaskSubmission
+
 User = get_user_model()
 
 
@@ -46,4 +48,65 @@ class AdminUserCreationForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class AdminUserEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["username", "email", "role"]
+
+
+class CourseForm(forms.ModelForm):
+    teachers = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(role=User.Roles.TEACHER),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
+    students = forms.ModelMultipleChoiceField(
+        queryset=User.objects.filter(role=User.Roles.STUDENT),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    class Meta:
+        model = Course
+        fields = ["name", "description", "teachers", "students"]
+
+
+class LearningMaterialForm(forms.ModelForm):
+    class Meta:
+        model = LearningMaterial
+        fields = ["title", "content", "file"]
+
+
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ["title", "task_type", "rules", "is_group_task", "is_graded", "due_date"]
+        widgets = {
+            "due_date": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+
+
+class TaskGroupForm(forms.ModelForm):
+    students = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
+    class Meta:
+        model = TaskGroup
+        fields = ["name", "students"]
+
+    def __init__(self, *args, course=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if course:
+            self.fields["students"].queryset = course.students.all()
+
+
+class SubmissionFeedbackForm(forms.ModelForm):
+    class Meta:
+        model = TaskSubmission
+        fields = ["feedback", "grade"]
 

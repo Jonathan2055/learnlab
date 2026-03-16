@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+
+{% block title %}{% if course %}Edit{% else %}Create{% endif %} Class – LearnLab{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'admin_dashboard' %}" class="sidebar-link sidebar-link-active">Users & Classes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            {% if course %}
+                <a href="{% url 'admin_class_detail' course.pk %}" class="back-link">← Back to Class</a>
+                <h1>Edit Class: {{ course.name }}</h1>
+            {% else %}
+                <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Dashboard</a>
+                <h1>Create Class</h1>
+            {% endif %}
+            <p>Set name, description, and assign teachers and students.</p>
+        </header>
+
+        <section class="card" style="max-width: 640px;">
+            <form method="post" class="stacked-form">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="{{ form.name.id_for_label }}">Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="field-error">{{ form.name.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
+                </div>
+                <div class="form-field">
+                    <label>Teachers</label>
+                    <div class="checkbox-grid">{{ form.teachers }}</div>
+                </div>
+                <div class="form-field">
+                    <label>Students</label>
+                    <div class="checkbox-grid">{{ form.students }}</div>
+                </div>
+                <button type="submit" class="btn btn-primary">{% if course %}Save Changes{% else %}Create Class{% endif %}</button>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

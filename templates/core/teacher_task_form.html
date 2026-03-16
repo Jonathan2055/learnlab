@@ -1,0 +1,70 @@
+{% extends "core/base.html" %}
+
+{% block title %}{% if task %}Edit{% else %}Create{% endif %} Task – {{ course.name }}{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
+            <a href="{% url 'teacher_class_detail' course.pk %}" class="sidebar-link sidebar-link-active">{{ course.name }}</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            {% if task %}
+                <a href="{% url 'teacher_task_detail' task.pk %}" class="back-link">← Back to Task</a>
+                <h1>Edit Task: {{ task.title }}</h1>
+            {% else %}
+                <a href="{% url 'teacher_class_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
+                <h1>Create Task</h1>
+            {% endif %}
+            <p>Project or research, individual or group. Add rules and due date.</p>
+        </header>
+
+        <section class="card" style="max-width: 600px;">
+            <form method="post" class="stacked-form">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="{{ form.title.id_for_label }}">Title</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<div class="field-error">{{ form.title.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="{{ form.task_type.id_for_label }}">Type</label>
+                        {{ form.task_type }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.due_date.id_for_label }}">Due Date</label>
+                        {{ form.due_date }}
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label class="checkbox-label">{{ form.is_group_task }} Group task (assign groups later)</label>
+                    </div>
+                    <div class="form-field">
+                        <label class="checkbox-label">{{ form.is_graded }} Graded</label>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.rules.id_for_label }}">Rules / Instructions</label>
+                    {{ form.rules }}
+                </div>
+                <button type="submit" class="btn btn-primary">{% if task %}Save Changes{% else %}Create Task{% endif %}</button>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

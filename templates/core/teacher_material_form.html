@@ -1,0 +1,52 @@
+{% extends "core/base.html" %}
+
+{% block title %}Upload Material – {{ course.name }}{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
+            <a href="{% url 'teacher_class_detail' course.pk %}" class="sidebar-link sidebar-link-active">{{ course.name }}</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'teacher_class_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
+            <h1>Upload Learning Material</h1>
+            <p>Add a file or text content for your students.</p>
+        </header>
+
+        <section class="card" style="max-width: 560px;">
+            <form method="post" enctype="multipart/form-data" class="stacked-form">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="{{ form.title.id_for_label }}">Title</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<div class="field-error">{{ form.title.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.content.id_for_label }}">Content (optional)</label>
+                    {{ form.content }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.file.id_for_label }}">File (optional)</label>
+                    {{ form.file }}
+                    {% if form.file.errors %}<div class="field-error">{{ form.file.errors|striptags }}</div>{% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

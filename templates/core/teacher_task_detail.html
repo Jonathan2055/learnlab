@@ -1,0 +1,106 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ task.title }} – Teacher{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
+            <a href="{% url 'teacher_class_detail' course.pk %}" class="sidebar-link">{{ course.name }}</a>
+            <a href="{% url 'teacher_task_detail' task.pk %}" class="sidebar-link sidebar-link-active">{{ task.title }}</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'teacher_class_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
+            <div class="card-header-row">
+                <h1>{{ task.title }}</h1>
+                <span class="action-group">
+                    <a href="{% url 'teacher_task_edit' task.pk %}" class="btn btn-secondary">Edit Task</a>
+                    {% if task.is_group_task %}
+                        <a href="{% url 'teacher_task_group_create' task.pk %}" class="btn btn-primary">Create Group</a>
+                    {% endif %}
+                    <form method="post" action="{% url 'teacher_task_delete' task.pk %}" class="inline-form" onsubmit="return confirm('Delete this task?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </span>
+            </div>
+            <p>{{ task.get_task_type_display }} · {% if task.is_group_task %}Group{% else %}Individual{% endif %} · {% if task.is_graded %}Graded{% else %}Ungraded{% endif %} · Due {{ task.due_date|date:"M j, Y"|default:"—" }}</p>
+            {% if task.rules %}
+                <div class="task-rules"><strong>Rules:</strong><pre>{{ task.rules }}</pre></div>
+            {% endif %}
+        </header>
+
+        {% if messages %}
+            <div class="dashboard-messages">
+                {% for message in messages %}
+                    <div class="dashboard-message dashboard-message-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if task.is_group_task %}
+        <section class="card">
+            <h2>Groups</h2>
+            <p class="card-subtitle">Groups for this task. One student per group can submit.</p>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead><tr><th>Group</th><th>Members</th></tr></thead>
+                    <tbody>
+                    {% for g in groups %}
+                        <tr>
+                            <td>{{ g.name }}</td>
+                            <td>{% for s in g.students.all %}{{ s.username }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="2" class="text-muted">No groups yet. <a href="{% url 'teacher_task_group_create' task.pk %}">Create a group</a>.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="card" style="margin-top: 1.6rem;">
+            <h2>Submissions</h2>
+            <p class="card-subtitle">Review and give feedback or grades.</p>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                    <tr><th>Submitted by</th><th>Group</th><th>Date</th><th>Grade</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for s in submissions %}
+                        <tr>
+                            <td>{{ s.submitted_by.username }}</td>
+                            <td>{{ s.group.name|default:"—" }}</td>
+                            <td>{{ s.submitted_at|date:"M j, Y H:i" }}</td>
+                            <td>{{ s.grade|default:"—" }}</td>
+                            <td class="table-actions">
+                                {% if s.content %}<span class="submission-preview" title="{{ s.content|truncatewords:30 }}">📄</span>{% endif %}
+                                {% if s.file %}<a href="{{ s.file.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary">File</a>{% endif %}
+                                <a href="{% url 'teacher_submission_grade' s.pk %}" class="btn btn-sm btn-primary">Feedback / Grade</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-muted">No submissions yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}

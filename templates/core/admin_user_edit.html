@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+
+{% block title %}Edit User – LearnLab{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-admin{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'admin_dashboard' %}" class="sidebar-link sidebar-link-active">Users & Classes</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Dashboard</a>
+            <h1>Edit User: {{ target_user.username }}</h1>
+            <p>Update username, email, or role.</p>
+        </header>
+
+        {% if messages %}
+            <div class="dashboard-messages">
+                {% for message in messages %}
+                    <div class="dashboard-message dashboard-message-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="card" style="max-width: 520px;">
+            <form method="post" class="stacked-form">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}<div class="field-error">{{ form.username.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.email.id_for_label }}">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="field-error">{{ form.email.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.role.id_for_label }}">Role</label>
+                    {{ form.role }}
+                </div>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+        </section>
+    </main>
+</div>
+{% endblock %}

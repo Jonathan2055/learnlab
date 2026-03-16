@@ -12,7 +12,7 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{% url 'admin_dashboard' %}" class="sidebar-link sidebar-link-active">
-                Users
+                Users & Classes
             </a>
         </nav>
         <div class="sidebar-footer">
@@ -25,7 +25,7 @@
         <header class="dashboard-header">
             <div>
                 <h1>Admin Dashboard</h1>
-                <p>Manage teachers and students for your institution.</p>
+                <p>Manage teachers, students, and classes.</p>
             </div>
         </header>
 
@@ -43,7 +43,7 @@
             <section class="card">
                 <h2>Create User</h2>
                 <p class="card-subtitle">
-                    Add new Teachers or Students with a single form.
+                    Add new Teachers or Students.
                 </p>
                 <form method="post" class="stacked-form">
                     {% csrf_token %}
@@ -67,9 +67,6 @@
                         <div class="form-field">
                             <label for="{{ form.role.id_for_label }}">Role</label>
                             {{ form.role }}
-                            {% if form.role.errors %}
-                                <div class="field-error">{{ form.role.errors|striptags }}</div>
-                            {% endif %}
                         </div>
                     </div>
                     <div class="form-row">
@@ -95,7 +92,7 @@
             <section class="card">
                 <h2>Existing Users</h2>
                 <p class="card-subtitle">
-                    Quick overview of all non-admin accounts.
+                    Edit or delete teachers and students.
                 </p>
                 <div class="table-wrapper">
                     <table class="data-table">
@@ -104,6 +101,7 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -112,12 +110,21 @@
                                 <td>{{ u.username }}</td>
                                 <td>{{ u.email }}</td>
                                 <td>{{ u.get_role_display }}</td>
+                                <td class="table-actions">
+                                    {% if not u.is_superuser %}
+                                        <a href="{% url 'admin_user_edit' u.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                        <form method="post" action="{% url 'admin_user_delete' u.pk %}" class="inline-form" onsubmit="return confirm('Delete this user?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="3" class="text-muted">
-                                    No users created yet.
-                                </td>
+                                <td colspan="4" class="text-muted">No users created yet.</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -125,7 +132,49 @@
                 </div>
             </section>
         </section>
+
+        <section class="card" style="margin-top: 1.6rem;">
+            <div class="card-header-row">
+                <h2>Classes</h2>
+                <a href="{% url 'admin_class_create' %}" class="btn btn-primary">Create Class</a>
+            </div>
+            <p class="card-subtitle">
+                Create classes and assign teachers and students.
+            </p>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Teachers</th>
+                        <th>Students</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for c in courses %}
+                        <tr>
+                            <td><a href="{% url 'admin_class_detail' c.pk %}">{{ c.name }}</a></td>
+                            <td>{{ c.teachers.count }}</td>
+                            <td>{{ c.students.count }}</td>
+                            <td class="table-actions">
+                                <a href="{% url 'admin_class_detail' c.pk %}" class="btn btn-sm btn-secondary">View</a>
+                                <a href="{% url 'admin_class_edit' c.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                <form method="post" action="{% url 'admin_class_delete' c.pk %}" class="inline-form" onsubmit="return confirm('Delete this class?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-muted">No classes yet. <a href="{% url 'admin_class_create' %}">Create one</a>.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </div>
 {% endblock %}
-
