@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Course, LearningMaterial, Task, TaskGroup, TaskSubmission
+from .models import Classroom, Course, LearningMaterial, Task, TaskGroup, TaskSubmission
 
 User = get_user_model()
 
@@ -53,24 +53,30 @@ class AdminUserCreationForm(forms.ModelForm):
 class AdminUserEditForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["username", "email", "role"]
+        fields = ["username", "email", "role", "student_class"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if getattr(self.instance, "role", None) != User.Roles.STUDENT:
+            self.fields["student_class"].disabled = True
 
 
-class CourseForm(forms.ModelForm):
+class ClassroomForm(forms.ModelForm):
     teachers = forms.ModelMultipleChoiceField(
         queryset=User.objects.filter(role=User.Roles.TEACHER),
         required=False,
         widget=forms.CheckboxSelectMultiple,
     )
-    students = forms.ModelMultipleChoiceField(
-        queryset=User.objects.filter(role=User.Roles.STUDENT),
-        required=False,
-        widget=forms.CheckboxSelectMultiple,
-    )
 
     class Meta:
+        model = Classroom
+        fields = ["name", "description", "teachers"]
+
+
+class CourseForm(forms.ModelForm):
+    class Meta:
         model = Course
-        fields = ["name", "description", "teachers", "students"]
+        fields = ["classroom", "name", "description"]
 
 
 class LearningMaterialForm(forms.ModelForm):
@@ -102,11 +108,17 @@ class TaskGroupForm(forms.ModelForm):
     def __init__(self, *args, course=None, **kwargs):
         super().__init__(*args, **kwargs)
         if course:
-            self.fields["students"].queryset = course.students.all()
+            self.fields["students"].queryset = course.classroom.students.all()
 
 
 class SubmissionFeedbackForm(forms.ModelForm):
     class Meta:
         model = TaskSubmission
         fields = ["feedback", "grade"]
+
+
+class TaskSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = TaskSubmission
+        fields = ["content", "file"]
 

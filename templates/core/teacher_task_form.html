@@ -12,7 +12,7 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
-            <a href="{% url 'teacher_class_detail' course.pk %}" class="sidebar-link sidebar-link-active">{{ course.name }}</a>
+            <a href="{% url 'teacher_course_detail' course.pk %}" class="sidebar-link sidebar-link-active">{{ course.name }}</a>
         </nav>
         <div class="sidebar-footer">
             <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
@@ -26,7 +26,7 @@
                 <a href="{% url 'teacher_task_detail' task.pk %}" class="back-link">← Back to Task</a>
                 <h1>Edit Task: {{ task.title }}</h1>
             {% else %}
-                <a href="{% url 'teacher_class_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
+                <a href="{% url 'teacher_course_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
                 <h1>Create Task</h1>
             {% endif %}
             <p>Project or research, individual or group. Add rules and due date.</p>

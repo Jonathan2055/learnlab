@@ -667,3 +667,27 @@ button {
   resize: vertical;
 }
 
+.search-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  margin: 1rem 0 1.2rem;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 220px;
+  border-radius: 999px;
+  border: 1px solid #cbd5f5;
+  padding: 0.65rem 0.95rem;
+  font-size: 0.9rem;
+  background: #ffffff;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.15);
+}
+

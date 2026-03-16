@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block title %}{{ course.name }} – LearnLab{% endblock %}
+{% block title %}{{ classroom.name }} – LearnLab{% endblock %}
 {% block body_class %}page-dashboard page-dashboard-admin{% endblock %}
 
 {% block content %}
@@ -23,16 +23,16 @@
         <header class="dashboard-header">
             <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Dashboard</a>
             <div class="card-header-row">
-                <h1>{{ course.name }}</h1>
+                <h1>{{ classroom.name }}</h1>
                 <span class="action-group">
-                    <a href="{% url 'admin_class_edit' course.pk %}" class="btn btn-secondary">Edit Class</a>
-                    <form method="post" action="{% url 'admin_class_delete' course.pk %}" class="inline-form" onsubmit="return confirm('Delete this class?');">
+                    <a href="{% url 'admin_class_edit' classroom.pk %}" class="btn btn-secondary">Edit Class</a>
+                    <form method="post" action="{% url 'admin_class_delete' classroom.pk %}" class="inline-form" onsubmit="return confirm('Delete this class?');">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">Delete Class</button>
                     </form>
                 </span>
             </div>
-            {% if course.description %}<p>{{ course.description }}</p>{% endif %}
+            {% if classroom.description %}<p>{{ classroom.description }}</p>{% endif %}
         </header>
 
         <section class="card-grid">
@@ -60,12 +60,43 @@
                         {% for s in students %}
                             <tr><td>{{ s.username }}</td><td>{{ s.email }}</td></tr>
                         {% empty %}
-                            <tr><td colspan="2" class="text-muted">No students assigned. Edit class to add.</td></tr>
+                            <tr><td colspan="2" class="text-muted">No students assigned. Edit a student user and set their class.</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </section>
+        </section>
+
+        <section class="card" style="margin-top: 1.6rem;">
+            <div class="card-header-row">
+                <h2>Courses</h2>
+                <a class="btn btn-primary" href="{% url 'admin_course_create' classroom.pk %}">Create Course</a>
+            </div>
+            <p class="card-subtitle">Courses live inside this class.</p>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead><tr><th>Name</th><th>Materials</th><th>Tasks</th><th>Actions</th></tr></thead>
+                    <tbody>
+                    {% for course in courses %}
+                        <tr>
+                            <td>{{ course.name }}</td>
+                            <td>{{ course.materials.count }}</td>
+                            <td>{{ course.tasks.count }}</td>
+                            <td class="table-actions">
+                                <a class="btn btn-sm btn-secondary" href="{% url 'admin_course_edit' course.pk %}">Edit</a>
+                                <form method="post" action="{% url 'admin_course_delete' course.pk %}" class="inline-form" onsubmit="return confirm('Delete this course?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="text-muted">No courses yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </section>
     </main>
 </div>

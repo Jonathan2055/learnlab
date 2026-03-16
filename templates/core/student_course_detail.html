@@ -1,0 +1,125 @@
+{% extends "core/base.html" %}
+{% load core_extras %}
+
+{% block title %}{{ course.name }} – Student{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-student{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'student_dashboard' %}" class="sidebar-link">Dashboard</a>
+            <a href="{% url 'student_course_detail' course.pk %}?tab=tasks" class="sidebar-link {% if tab == 'tasks' %}sidebar-link-active{% endif %}">Tasks</a>
+            <a href="{% url 'student_course_detail' course.pk %}?tab=materials" class="sidebar-link {% if tab == 'materials' %}sidebar-link-active{% endif %}">Materials</a>
+            <a href="{% url 'student_course_detail' course.pk %}?tab=grades" class="sidebar-link {% if tab == 'grades' %}sidebar-link-active{% endif %}">Grades</a>
+            <a href="{% url 'student_portfolio' %}" class="sidebar-link">Portfolio</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'student_dashboard' %}" class="back-link">← Back to Dashboard</a>
+            <h1>{{ course.name }}</h1>
+            <p>Class: {{ classroom.name }}</p>
+        </header>
+
+        <form method="get" class="search-row">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <input class="search-input" type="text" name="q" value="{{ q }}" placeholder="Search…">
+            <button class="btn btn-secondary" type="submit">Search</button>
+            {% if q %}<a class="btn btn-secondary" href="{% url 'student_course_detail' course.pk %}?tab={{ tab }}">Clear</a>{% endif %}
+        </form>
+
+        {% if tab == 'materials' %}
+            <section class="card">
+                <h2>Materials</h2>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th>Title</th><th>Uploaded</th></tr></thead>
+                        <tbody>
+                        {% for m in materials %}
+                            <tr>
+                                <td>
+                                    {% if m.file %}<a href="{{ m.file.url }}" target="_blank" rel="noopener">{{ m.title }}</a>
+                                    {% else %}{{ m.title }}{% endif %}
+                                </td>
+                                <td>{{ m.uploaded_at|date:"M j, Y" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="2" class="text-muted">No materials yet.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% elif tab == 'grades' %}
+            <section class="card">
+                <h2>Grades</h2>
+                <p class="card-subtitle">Grades and feedback for this course.</p>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th>Task</th><th>Type</th><th>Grade</th><th>Feedback</th></tr></thead>
+                        <tbody>
+                        {% for t in tasks %}
+                            {% with s=grades_by_task|get_item:t.id %}
+                            <tr>
+                                <td><a href="{% url 'student_task_detail' t.pk %}">{{ t.title }}</a></td>
+                                <td>{{ t.get_task_type_display }}</td>
+                                <td>
+                                    {% if t.is_graded %}
+                                        {% if s and s.grade != None %}{{ s.grade }}{% else %}—{% endif %}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>{% if s and s.feedback %}{{ s.feedback|truncatewords:18 }}{% else %}—{% endif %}</td>
+                            </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr><td colspan="4" class="text-muted">No tasks yet.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% else %}
+            <section class="card">
+                <h2>Tasks</h2>
+                <p class="card-subtitle">Open a task to submit evidence and view feedback.</p>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th>Title</th><th>Type</th><th>Mode</th><th>Due</th><th>Status</th></tr></thead>
+                        <tbody>
+                        {% for t in tasks %}
+                            {% with s=grades_by_task|get_item:t.id %}
+                            <tr>
+                                <td><a href="{% url 'student_task_detail' t.pk %}">{{ t.title }}</a></td>
+                                <td>{{ t.get_task_type_display }}</td>
+                                <td>{% if t.is_group_task %}Group{% else %}Individual{% endif %}</td>
+                                <td>{{ t.due_date|date:"M j, Y"|default:"—" }}</td>
+                                <td>
+                                    {% if s %}Submitted{% else %}Not submitted{% endif %}
+                                    {% if t.is_graded and s and s.grade != None %} · Graded{% endif %}
+                                </td>
+                            </tr>
+                            {% endwith %}
+                        {% empty %}
+                            <tr><td colspan="5" class="text-muted">No tasks yet.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}
+

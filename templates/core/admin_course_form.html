@@ -1,7 +1,7 @@
 {% extends "core/base.html" %}
 
-{% block title %}Create Group – {{ task.title }}{% endblock %}
-{% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
+{% block title %}{% if course %}Edit{% else %}Create{% endif %} Course – LearnLab{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-admin{% endblock %}
 
 {% block content %}
 <div class="dashboard-layout">
@@ -11,9 +11,7 @@
             <span class="sidebar-title">LearnLab</span>
         </div>
         <nav class="sidebar-nav">
-            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
-            <a href="{% url 'teacher_course_detail' task.course.pk %}" class="sidebar-link">{{ task.course.name }}</a>
-            <a href="{% url 'teacher_task_detail' task.pk %}" class="sidebar-link sidebar-link-active">{{ task.title }}</a>
+            <a href="{% url 'admin_dashboard' %}?tab=classes" class="sidebar-link sidebar-link-active">Classes</a>
         </nav>
         <div class="sidebar-footer">
             <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
@@ -23,26 +21,31 @@
 
     <main class="dashboard-main">
         <header class="dashboard-header">
-            <a href="{% url 'teacher_task_detail' task.pk %}" class="back-link">← Back to Task</a>
-            <h1>Create Group for {{ task.title }}</h1>
-            <p>Assign students to this group. One member can submit on behalf of the group.</p>
+            <a href="{% url 'admin_class_detail' classroom.pk %}" class="back-link">← Back to {{ classroom.name }}</a>
+            <h1>{% if course %}Edit{% else %}Create{% endif %} Course</h1>
+            <p>Courses live inside a class.</p>
         </header>
 
-        <section class="card" style="max-width: 520px;">
+        <section class="card" style="max-width: 640px;">
             <form method="post" class="stacked-form">
                 {% csrf_token %}
                 <div class="form-field">
-                    <label for="{{ form.name.id_for_label }}">Group Name</label>
+                    <label for="{{ form.classroom.id_for_label }}">Class</label>
+                    {{ form.classroom }}
+                </div>
+                <div class="form-field">
+                    <label for="{{ form.name.id_for_label }}">Name</label>
                     {{ form.name }}
                     {% if form.name.errors %}<div class="field-error">{{ form.name.errors|striptags }}</div>{% endif %}
                 </div>
                 <div class="form-field">
-                    <label>Members</label>
-                    <div class="checkbox-grid">{{ form.students }}</div>
+                    <label for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
                 </div>
-                <button type="submit" class="btn btn-primary">Create Group</button>
+                <button type="submit" class="btn btn-primary">{% if course %}Save Changes{% else %}Create Course{% endif %}</button>
             </form>
         </section>
     </main>
 </div>
 {% endblock %}
+

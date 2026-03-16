@@ -12,7 +12,7 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
-            <a href="{% url 'teacher_class_detail' course.pk %}" class="sidebar-link sidebar-link-active">{{ course.name }}</a>
+            <a href="{% url 'teacher_course_detail' course.pk %}" class="sidebar-link sidebar-link-active">{{ course.name }}</a>
         </nav>
         <div class="sidebar-footer">
             <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
@@ -22,7 +22,7 @@
 
     <main class="dashboard-main">
         <header class="dashboard-header">
-            <a href="{% url 'teacher_class_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
+            <a href="{% url 'teacher_course_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
             <h1>Upload Learning Material</h1>
             <p>Add a file or text content for your students.</p>
         </header>

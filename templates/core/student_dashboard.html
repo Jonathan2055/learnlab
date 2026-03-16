@@ -4,12 +4,59 @@
 {% block body_class %}page-dashboard page-dashboard-student{% endblock %}
 
 {% block content %}
-<div class="dashboard-placeholder">
-    <div class="dashboard-placeholder-card">
-        <h1>Student Dashboard</h1>
-        <p>This is a placeholder. We will add course views, tasks, submissions, and portfolio features next.</p>
-        <a href="{% url 'logout' %}" class="btn btn-secondary">Log out</a>
-    </div>
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'student_dashboard' %}" class="sidebar-link sidebar-link-active">Dashboard</a>
+            <a href="{% url 'student_portfolio' %}" class="sidebar-link">Portfolio</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <h1>Student Dashboard</h1>
+            <p>
+                Class:
+                {% if classroom %}<strong>{{ classroom.name }}</strong>{% else %}<strong>Not assigned yet</strong>{% endif %}
+            </p>
+        </header>
+
+        <form method="get" class="search-row">
+            <input class="search-input" type="text" name="q" value="{{ q }}" placeholder="Search courses…">
+            <button class="btn btn-secondary" type="submit">Search</button>
+            {% if q %}<a class="btn btn-secondary" href="{% url 'student_dashboard' %}">Clear</a>{% endif %}
+        </form>
+
+        {% if classroom %}
+            <section class="card">
+                <h2>Courses</h2>
+                <p class="card-subtitle">Open a course to view materials, tasks, submissions, and grades.</p>
+                <div class="class-grid">
+                    {% for course in courses %}
+                        <a href="{% url 'student_course_detail' course.pk %}" class="class-card">
+                            <h3>{{ course.name }}</h3>
+                            <p>{{ course.tasks.count }} tasks · {{ course.materials.count }} materials</p>
+                        </a>
+                    {% empty %}
+                        <p class="text-muted">No courses in your class yet.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        {% else %}
+            <section class="card">
+                <h2>Waiting for class assignment</h2>
+                <p class="card-subtitle">Ask an administrator to assign you to a class. Once assigned, your courses will appear here.</p>
+            </section>
+        {% endif %}
+    </main>
 </div>
 {% endblock %}
 

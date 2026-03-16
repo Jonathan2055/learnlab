@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block title %}{% if course %}Edit{% else %}Create{% endif %} Class – LearnLab{% endblock %}
+{% block title %}{% if classroom %}Edit{% else %}Create{% endif %} Class – LearnLab{% endblock %}
 {% block body_class %}page-dashboard page-dashboard-admin{% endblock %}
 
 {% block content %}
@@ -21,14 +21,14 @@
 
     <main class="dashboard-main">
         <header class="dashboard-header">
-            {% if course %}
-                <a href="{% url 'admin_class_detail' course.pk %}" class="back-link">← Back to Class</a>
-                <h1>Edit Class: {{ course.name }}</h1>
+            {% if classroom %}
+                <a href="{% url 'admin_class_detail' classroom.pk %}" class="back-link">← Back to Class</a>
+                <h1>Edit Class: {{ classroom.name }}</h1>
             {% else %}
                 <a href="{% url 'admin_dashboard' %}" class="back-link">← Back to Dashboard</a>
                 <h1>Create Class</h1>
             {% endif %}
-            <p>Set name, description, and assign teachers and students.</p>
+            <p>Set name, description, and assign teachers. Students are assigned on the user edit page.</p>
         </header>
 
         <section class="card" style="max-width: 640px;">
@@ -47,11 +47,7 @@
                     <label>Teachers</label>
                     <div class="checkbox-grid">{{ form.teachers }}</div>
                 </div>
-                <div class="form-field">
-                    <label>Students</label>
-                    <div class="checkbox-grid">{{ form.students }}</div>
-                </div>
-                <button type="submit" class="btn btn-primary">{% if course %}Save Changes{% else %}Create Class{% endif %}</button>
+                <button type="submit" class="btn btn-primary">{% if classroom %}Save Changes{% else %}Create Class{% endif %}</button>
             </form>
         </section>
     </main>

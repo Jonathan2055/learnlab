@@ -3,6 +3,24 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
+class Classroom(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    teachers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="teaching_classrooms",
+        blank=True,
+        limit_choices_to={"role": "TEACHER"},
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class User(AbstractUser):
     class Roles(models.TextChoices):
         ADMIN = "ADMIN", "Admin"
@@ -15,31 +33,36 @@ class User(AbstractUser):
         default=Roles.STUDENT,
     )
 
+    student_class = models.ForeignKey(
+        "Classroom",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="students",
+    )
+
     def is_admin(self) -> bool:
         return self.role == self.Roles.ADMIN or self.is_superuser
 
     def save(self, *args, **kwargs):
         if self.is_superuser:
             self.role = self.Roles.ADMIN
+        if self.role != self.Roles.STUDENT:
+            self.student_class = None
         super().save(*args, **kwargs)
 
 
 class Course(models.Model):
+    classroom = models.ForeignKey(
+        Classroom,
+        on_delete=models.CASCADE,
+        related_name="courses",
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    teachers = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="teaching_courses",
-        blank=True,
-        limit_choices_to={"role": "TEACHER"},
-    )
-    students = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        related_name="enrolled_courses",
-        blank=True,
-        limit_choices_to={"role": "STUDENT"},
-    )
 
     class Meta:
         ordering = ["-created_at"]

@@ -51,6 +51,11 @@
                     <label for="{{ form.role.id_for_label }}">Role</label>
                     {{ form.role }}
                 </div>
+                <div class="form-field">
+                    <label for="{{ form.student_class.id_for_label }}">Student Class (students only)</label>
+                    {{ form.student_class }}
+                    {% if form.student_class.errors %}<div class="field-error">{{ form.student_class.errors|striptags }}</div>{% endif %}
+                </div>
                 <button type="submit" class="btn btn-primary">Save Changes</button>
             </form>
         </section>

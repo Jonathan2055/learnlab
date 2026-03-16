@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block title %}{{ course.name }} – Teacher{% endblock %}
+{% block title %}{{ classroom.name }} – Teacher{% endblock %}
 {% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
-            <a href="{% url 'teacher_class_detail' course.pk %}" class="sidebar-link sidebar-link-active">{{ course.name }}</a>
+            <a href="{% url 'teacher_class_detail' classroom.pk %}" class="sidebar-link sidebar-link-active">{{ classroom.name }}</a>
         </nav>
         <div class="sidebar-footer">
             <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
@@ -24,13 +24,9 @@
         <header class="dashboard-header">
             <a href="{% url 'teacher_dashboard' %}" class="back-link">← Back to My Classes</a>
             <div class="card-header-row">
-                <h1>{{ course.name }}</h1>
-                <span class="action-group">
-                    <a href="{% url 'teacher_material_upload' course.pk %}" class="btn btn-primary">Upload Material</a>
-                    <a href="{% url 'teacher_task_create' course.pk %}" class="btn btn-secondary">Create Task</a>
-                </span>
+                <h1>{{ classroom.name }}</h1>
             </div>
-            <p>{{ course.students.count }} students enrolled</p>
+            <p>{{ classroom.students.count }} students enrolled · {{ classroom.courses.count }} courses</p>
         </header>
 
         {% if messages %}
@@ -42,65 +38,17 @@
         {% endif %}
 
         <section class="card">
-            <h2>Learning Materials</h2>
-            <p class="card-subtitle">Resources for students.</p>
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                    <tr><th>Title</th><th>Uploaded</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                    {% for m in materials %}
-                        <tr>
-                            <td>
-                                {% if m.file %}<a href="{{ m.file.url }}" target="_blank" rel="noopener">{{ m.title }}</a>
-                                {% else %}{{ m.title }}{% endif %}
-                            </td>
-                            <td>{{ m.uploaded_at|date:"M j, Y" }}</td>
-                            <td class="table-actions">
-                                <form method="post" action="{% url 'teacher_material_delete' m.pk %}" class="inline-form" onsubmit="return confirm('Delete this material?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="3" class="text-muted">No materials yet. <a href="{% url 'teacher_material_upload' course.pk %}">Upload one</a>.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <section class="card" style="margin-top: 1.6rem;">
-            <h2>Tasks</h2>
-            <p class="card-subtitle">Projects and research assignments.</p>
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                    <tr><th>Title</th><th>Type</th><th>Mode</th><th>Due</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                    {% for t in tasks %}
-                        <tr>
-                            <td><a href="{% url 'teacher_task_detail' t.pk %}">{{ t.title }}</a></td>
-                            <td>{{ t.get_task_type_display }}</td>
-                            <td>{% if t.is_group_task %}Group{% else %}Individual{% endif %}</td>
-                            <td>{{ t.due_date|date:"M j, Y"|default:"—" }}</td>
-                            <td class="table-actions">
-                                <a href="{% url 'teacher_task_detail' t.pk %}" class="btn btn-sm btn-secondary">View</a>
-                                <a href="{% url 'teacher_task_edit' t.pk %}" class="btn btn-sm btn-secondary">Edit</a>
-                                <form method="post" action="{% url 'teacher_task_delete' t.pk %}" class="inline-form" onsubmit="return confirm('Delete this task?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="5" class="text-muted">No tasks yet. <a href="{% url 'teacher_task_create' course.pk %}">Create one</a>.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
+            <h2>Courses</h2>
+            <p class="card-subtitle">Open a course to upload materials, create tasks, and review submissions.</p>
+            <div class="class-grid">
+                {% for course in courses %}
+                    <a href="{% url 'teacher_course_detail' course.pk %}" class="class-card">
+                        <h3>{{ course.name }}</h3>
+                        <p>{{ course.materials.count }} materials · {{ course.tasks.count }} tasks</p>
+                    </a>
+                {% empty %}
+                    <p class="text-muted">No courses in this class yet. Ask an admin to create courses.</p>
+                {% endfor %}
             </div>
         </section>
     </main>

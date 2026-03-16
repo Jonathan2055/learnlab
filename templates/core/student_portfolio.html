@@ -1,0 +1,60 @@
+{% extends "core/base.html" %}
+
+{% block title %}Portfolio – LearnLab{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-student{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'student_dashboard' %}" class="sidebar-link">Dashboard</a>
+            <a href="{% url 'student_portfolio' %}" class="sidebar-link sidebar-link-active">Portfolio</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <div class="card-header-row">
+                <div>
+                    <h1>Portfolio</h1>
+                    <p>Completed tasks and projects you’ve submitted.</p>
+                </div>
+                <a class="btn btn-primary" href="{% url 'student_portfolio_pdf' %}">Download PDF</a>
+            </div>
+        </header>
+
+        <section class="card">
+            <h2>Submissions</h2>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                    <tr><th>Task</th><th>Course</th><th>Type</th><th>Date</th><th>Grade</th></tr>
+                    </thead>
+                    <tbody>
+                    {% for s in submissions %}
+                        <tr>
+                            <td>{{ s.task.title }}</td>
+                            <td>{{ s.task.course.name }}</td>
+                            <td>{{ s.task.get_task_type_display }}</td>
+                            <td>{{ s.submitted_at|date:"M j, Y" }}</td>
+                            <td>{% if s.task.is_graded %}{{ s.grade|default:"—" }}{% else %}—{% endif %}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-muted">No submissions yet. Submit tasks to build your portfolio.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
+

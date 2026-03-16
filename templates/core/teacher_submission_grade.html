@@ -12,7 +12,7 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
-            <a href="{% url 'teacher_class_detail' submission.task.course.pk %}" class="sidebar-link">{{ submission.task.course.name }}</a>
+            <a href="{% url 'teacher_course_detail' submission.task.course.pk %}" class="sidebar-link">{{ submission.task.course.name }}</a>
             <a href="{% url 'teacher_task_detail' submission.task.pk %}" class="sidebar-link sidebar-link-active">{{ submission.task.title }}</a>
         </nav>
         <div class="sidebar-footer">

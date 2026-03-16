@@ -11,9 +11,8 @@
             <span class="sidebar-title">LearnLab</span>
         </div>
         <nav class="sidebar-nav">
-            <a href="{% url 'admin_dashboard' %}" class="sidebar-link sidebar-link-active">
-                Users & Classes
-            </a>
+            <a href="{% url 'admin_dashboard' %}?tab=users" class="sidebar-link {% if tab == 'users' %}sidebar-link-active{% endif %}">Users</a>
+            <a href="{% url 'admin_dashboard' %}?tab=classes" class="sidebar-link {% if tab == 'classes' %}sidebar-link-active{% endif %}">Classes</a>
         </nav>
         <div class="sidebar-footer">
             <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
@@ -39,142 +38,174 @@
             </div>
         {% endif %}
 
-        <section class="card-grid">
-            <section class="card">
-                <h2>Create User</h2>
-                <p class="card-subtitle">
-                    Add new Teachers or Students.
-                </p>
-                <form method="post" class="stacked-form">
-                    {% csrf_token %}
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="{{ form.username.id_for_label }}">Username</label>
-                            {{ form.username }}
-                            {% if form.username.errors %}
-                                <div class="field-error">{{ form.username.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="form-field">
-                            <label for="{{ form.email.id_for_label }}">Email</label>
-                            {{ form.email }}
-                            {% if form.email.errors %}
-                                <div class="field-error">{{ form.email.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="{{ form.role.id_for_label }}">Role</label>
-                            {{ form.role }}
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="{{ form.password1.id_for_label }}">Password</label>
-                            {{ form.password1 }}
-                            {% if form.password1.errors %}
-                                <div class="field-error">{{ form.password1.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="form-field">
-                            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
-                            {{ form.password2 }}
-                            {% if form.password2.errors %}
-                                <div class="field-error">{{ form.password2.errors|striptags }}</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create User</button>
-                </form>
-            </section>
+        <form method="get" class="search-row">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <input class="search-input" type="text" name="q" value="{{ q }}" placeholder="Search…">
+            <button class="btn btn-secondary" type="submit">Search</button>
+            {% if q %}<a class="btn btn-secondary" href="{% url 'admin_dashboard' %}?tab={{ tab }}">Clear</a>{% endif %}
+        </form>
 
+        {% if tab == 'users' %}
+            <section class="card-grid">
+                <section class="card">
+                    <h2>Create User</h2>
+                    <p class="card-subtitle">Add new Teachers or Students.</p>
+                    <form method="post" class="stacked-form">
+                        {% csrf_token %}
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="{{ form.username.id_for_label }}">Username</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}<div class="field-error">{{ form.username.errors|striptags }}</div>{% endif %}
+                            </div>
+                            <div class="form-field">
+                                <label for="{{ form.email.id_for_label }}">Email</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}<div class="field-error">{{ form.email.errors|striptags }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="{{ form.role.id_for_label }}">Role</label>
+                                {{ form.role }}
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="{{ form.password1.id_for_label }}">Password</label>
+                                {{ form.password1 }}
+                                {% if form.password1.errors %}<div class="field-error">{{ form.password1.errors|striptags }}</div>{% endif %}
+                            </div>
+                            <div class="form-field">
+                                <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                                {{ form.password2 }}
+                                {% if form.password2.errors %}<div class="field-error">{{ form.password2.errors|striptags }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                    </form>
+                </section>
+
+                <section class="card">
+                    <h2>Existing Users</h2>
+                    <p class="card-subtitle">Edit, delete, and assign students to a class (via Edit).</p>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Class</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for u in users %}
+                                <tr>
+                                    <td>{{ u.username }}</td>
+                                    <td>{{ u.email }}</td>
+                                    <td>{{ u.get_role_display }}</td>
+                                    <td>{{ u.student_class.name|default:"—" }}</td>
+                                    <td class="table-actions">
+                                        {% if not u.is_superuser %}
+                                            <a href="{% url 'admin_user_edit' u.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                            <form method="post" action="{% url 'admin_user_delete' u.pk %}" class="inline-form" onsubmit="return confirm('Delete this user?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-muted">No users found.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </section>
+        {% elif tab == 'classes' %}
             <section class="card">
-                <h2>Existing Users</h2>
-                <p class="card-subtitle">
-                    Edit or delete teachers and students.
-                </p>
+                <div class="card-header-row">
+                    <h2>Classes</h2>
+                    <a href="{% url 'admin_class_create' %}" class="btn btn-primary">Create Class</a>
+                </div>
+                <p class="card-subtitle">A class contains many courses. Teachers are assigned at the class level. Students belong to one class.</p>
                 <div class="table-wrapper">
                     <table class="data-table">
                         <thead>
                         <tr>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
+                            <th>Name</th>
+                            <th>Teachers</th>
+                            <th>Students</th>
+                            <th>Courses</th>
                             <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {% for u in users %}
+                        {% for c in classrooms %}
                             <tr>
-                                <td>{{ u.username }}</td>
-                                <td>{{ u.email }}</td>
-                                <td>{{ u.get_role_display }}</td>
+                                <td><a href="{% url 'admin_class_detail' c.pk %}">{{ c.name }}</a></td>
+                                <td>{{ c.teachers.count }}</td>
+                                <td>{{ c.students.count }}</td>
+                                <td>{{ c.courses.count }}</td>
                                 <td class="table-actions">
-                                    {% if not u.is_superuser %}
-                                        <a href="{% url 'admin_user_edit' u.pk %}" class="btn btn-sm btn-secondary">Edit</a>
-                                        <form method="post" action="{% url 'admin_user_delete' u.pk %}" class="inline-form" onsubmit="return confirm('Delete this user?');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                        </form>
-                                    {% else %}
-                                        <span class="text-muted">—</span>
-                                    {% endif %}
+                                    <a href="{% url 'admin_class_detail' c.pk %}" class="btn btn-sm btn-secondary">View</a>
+                                    <a href="{% url 'admin_class_edit' c.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                    <form method="post" action="{% url 'admin_class_delete' c.pk %}" class="inline-form" onsubmit="return confirm('Delete this class?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
                                 </td>
                             </tr>
                         {% empty %}
-                            <tr>
-                                <td colspan="4" class="text-muted">No users created yet.</td>
-                            </tr>
+                            <tr><td colspan="5" class="text-muted">No classes found.</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </section>
-        </section>
-
-        <section class="card" style="margin-top: 1.6rem;">
-            <div class="card-header-row">
-                <h2>Classes</h2>
-                <a href="{% url 'admin_class_create' %}" class="btn btn-primary">Create Class</a>
-            </div>
-            <p class="card-subtitle">
-                Create classes and assign teachers and students.
-            </p>
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Teachers</th>
-                        <th>Students</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for c in courses %}
+        {% else %}
+            <section class="card">
+                <h2>Courses</h2>
+                <p class="card-subtitle">Courses live inside a class.</p>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
                         <tr>
-                            <td><a href="{% url 'admin_class_detail' c.pk %}">{{ c.name }}</a></td>
-                            <td>{{ c.teachers.count }}</td>
-                            <td>{{ c.students.count }}</td>
-                            <td class="table-actions">
-                                <a href="{% url 'admin_class_detail' c.pk %}" class="btn btn-sm btn-secondary">View</a>
-                                <a href="{% url 'admin_class_edit' c.pk %}" class="btn btn-sm btn-secondary">Edit</a>
-                                <form method="post" action="{% url 'admin_class_delete' c.pk %}" class="inline-form" onsubmit="return confirm('Delete this class?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                </form>
-                            </td>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Materials</th>
+                            <th>Tasks</th>
+                            <th>Actions</th>
                         </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-muted">No classes yet. <a href="{% url 'admin_class_create' %}">Create one</a>.</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                        </thead>
+                        <tbody>
+                        {% for course in courses %}
+                            <tr>
+                                <td>{{ course.name }}</td>
+                                <td><a href="{% url 'admin_class_detail' course.classroom.pk %}">{{ course.classroom.name }}</a></td>
+                                <td>{{ course.materials.count }}</td>
+                                <td>{{ course.tasks.count }}</td>
+                                <td class="table-actions">
+                                    <a href="{% url 'admin_course_edit' course.pk %}" class="btn btn-sm btn-secondary">Edit</a>
+                                    <form method="post" action="{% url 'admin_course_delete' course.pk %}" class="inline-form" onsubmit="return confirm('Delete this course?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="5" class="text-muted">No courses found.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        {% endif %}
     </main>
 </div>
 {% endblock %}

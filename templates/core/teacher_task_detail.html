@@ -12,7 +12,7 @@
         </div>
         <nav class="sidebar-nav">
             <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
-            <a href="{% url 'teacher_class_detail' course.pk %}" class="sidebar-link">{{ course.name }}</a>
+            <a href="{% url 'teacher_course_detail' course.pk %}" class="sidebar-link">{{ course.name }}</a>
             <a href="{% url 'teacher_task_detail' task.pk %}" class="sidebar-link sidebar-link-active">{{ task.title }}</a>
         </nav>
         <div class="sidebar-footer">
@@ -23,7 +23,7 @@
 
     <main class="dashboard-main">
         <header class="dashboard-header">
-            <a href="{% url 'teacher_class_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
+            <a href="{% url 'teacher_course_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
             <div class="card-header-row">
                 <h1>{{ task.title }}</h1>
                 <span class="action-group">

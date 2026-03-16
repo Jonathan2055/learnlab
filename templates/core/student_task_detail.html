@@ -1,0 +1,81 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ task.title }} – Student{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-student{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'student_dashboard' %}" class="sidebar-link">Dashboard</a>
+            <a href="{% url 'student_course_detail' course.pk %}" class="sidebar-link">{{ course.name }}</a>
+            <a href="{% url 'student_task_detail' task.pk %}" class="sidebar-link sidebar-link-active">Task</a>
+            <a href="{% url 'student_portfolio' %}" class="sidebar-link">Portfolio</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'student_course_detail' course.pk %}" class="back-link">← Back to {{ course.name }}</a>
+            <h1>{{ task.title }}</h1>
+            <p>{{ task.get_task_type_display }} · {% if task.is_group_task %}Group{% else %}Individual{% endif %} · Due {{ task.due_date|date:"M j, Y"|default:"—" }}</p>
+            {% if task.rules %}
+                <div class="task-rules"><strong>Rules:</strong><pre>{{ task.rules }}</pre></div>
+            {% endif %}
+        </header>
+
+        {% if messages %}
+            <div class="dashboard-messages">
+                {% for message in messages %}
+                    <div class="dashboard-message dashboard-message-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="card">
+            <h2>Submission</h2>
+            {% if existing %}
+                <p class="card-subtitle">You already submitted this task{% if group %} (Group: {{ group.name }}){% endif %}.</p>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th>Date</th><th>Grade</th><th>Feedback</th><th>File</th></tr></thead>
+                        <tbody>
+                        <tr>
+                            <td>{{ existing.submitted_at|date:"M j, Y H:i" }}</td>
+                            <td>{% if task.is_graded %}{{ existing.grade|default:"—" }}{% else %}—{% endif %}</td>
+                            <td>{% if existing.feedback %}{{ existing.feedback }}{% else %}—{% endif %}</td>
+                            <td>{% if existing.file %}<a href="{{ existing.file.url }}" target="_blank" rel="noopener">Download</a>{% else %}—{% endif %}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="card-subtitle">
+                    Upload evidence for this task{% if group %} (Group: {{ group.name }}){% endif %}.
+                </p>
+                <form method="post" enctype="multipart/form-data" class="stacked-form">
+                    {% csrf_token %}
+                    <div class="form-field">
+                        <label for="{{ form.content.id_for_label }}">Evidence / Notes (optional)</label>
+                        {{ form.content }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.file.id_for_label }}">File (optional)</label>
+                        {{ form.file }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            {% endif %}
+        </section>
+    </main>
+</div>
+{% endblock %}
+
