@@ -7,7 +7,7 @@ SECRET_KEY = "replace-this-with-a-secure-secret-key"
 
 DEBUG = True
 
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = ["127.0.0.1", "localhost", "testserver"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",

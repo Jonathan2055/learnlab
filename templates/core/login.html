@@ -36,11 +36,11 @@
                 {% csrf_token %}
 
                 <div class="form-field">
-                    <label for="{{ form.email.id_for_label }}">Email Address</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
+                    <label for="{{ form.identifier.id_for_label }}">Email or Username</label>
+                    {{ form.identifier }}
+                    {% if form.identifier.errors %}
                         <div class="field-error">
-                            {{ form.email.errors|striptags }}
+                            {{ form.identifier.errors|striptags }}
                         </div>
                     {% endif %}
                 </div>

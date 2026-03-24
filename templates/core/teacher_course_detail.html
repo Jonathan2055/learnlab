@@ -26,10 +26,7 @@
             <a href="{% url 'teacher_class_detail' classroom.pk %}" class="back-link">← Back to {{ classroom.name }}</a>
             <div class="card-header-row">
                 <h1>{{ course.name }}</h1>
-                <span class="action-group">
-                    <a href="{% url 'teacher_material_upload' course.pk %}" class="btn btn-primary">Upload Material</a>
-                    <a href="{% url 'teacher_task_create' course.pk %}" class="btn btn-secondary">Create Task</a>
-                </span>
+                
             </div>
             <p>{{ course.tasks.count }} tasks · {{ course.materials.count }} materials</p>
         </header>
@@ -50,6 +47,7 @@
 
         <section class="card">
             <h2>Learning Materials</h2>
+            <a href="{% url 'teacher_material_upload' course.pk %}" class="btn btn-primary">Upload Material</a>
             <p class="card-subtitle">Resources for students.</p>
             <div class="table-wrapper">
                 <table class="data-table">
@@ -81,6 +79,8 @@
 
         <section class="card" style="margin-top: 1.6rem;">
             <h2>Tasks</h2>
+            <a href="{% url 'teacher_task_create' course.pk %}" class="btn btn-secondary">Create Task</a>
+
             <p class="card-subtitle">Projects and research assignments.</p>
             <div class="table-wrapper">
                 <table class="data-table">

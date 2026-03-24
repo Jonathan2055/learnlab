@@ -46,13 +46,35 @@
                 <p class="card-subtitle">You already submitted this task{% if group %} (Group: {{ group.name }}){% endif %}.</p>
                 <div class="table-wrapper">
                     <table class="data-table">
-                        <thead><tr><th>Date</th><th>Grade</th><th>Feedback</th><th>File</th></tr></thead>
+                        <thead><tr><th>Date</th><th>Grade</th><th>Feedback</th><th>Link</th><th>Skills</th><th>File</th></tr></thead>
                         <tbody>
                         <tr>
                             <td>{{ existing.submitted_at|date:"M j, Y H:i" }}</td>
-                            <td>{% if task.is_graded %}{{ existing.grade|default:"—" }}{% else %}—{% endif %}</td>
+                            <td>
+                                {% if task.is_graded and existing.grade != None %}
+                                    {% if task.grading_mode == 'PERCENTAGE' %}
+                                        {{ existing.grade|floatformat:0 }} / 100%
+                                    {% else %}
+                                        {{ existing.grade|floatformat:0 }} / {{ task.max_score|floatformat:0 }}
+                                    {% endif %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
                             <td>{% if existing.feedback %}{{ existing.feedback }}{% else %}—{% endif %}</td>
-                            <td>{% if existing.file %}<a href="{{ existing.file.url }}" target="_blank" rel="noopener">Download</a>{% else %}—{% endif %}</td>
+                            <td>
+                                {% if existing.link %}
+                                    <a href="{{ existing.link }}" target="_blank" rel="noopener">Open</a>
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if existing.skills_gained %}
+                                    {{ existing.skills_gained|linebreaksbr }}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if existing.file %}<a href="{{ existing.file.url }}" target="_blank" rel="noopener">Download</a>{% else %}—{% endif %}
+                            </td>
                         </tr>
                         </tbody>
                     </table>
@@ -66,6 +88,14 @@
                     <div class="form-field">
                         <label for="{{ form.content.id_for_label }}">Evidence / Notes (optional)</label>
                         {{ form.content }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.link.id_for_label }}">Link (optional)</label>
+                        {{ form.link }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.skills_gained.id_for_label }}">Skills gained (optional)</label>
+                        {{ form.skills_gained }}
                     </div>
                     <div class="form-field">
                         <label for="{{ form.file.id_for_label }}">File (optional)</label>

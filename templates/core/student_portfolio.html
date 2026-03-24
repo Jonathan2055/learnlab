@@ -36,7 +36,7 @@
             <div class="table-wrapper">
                 <table class="data-table">
                     <thead>
-                    <tr><th>Task</th><th>Course</th><th>Type</th><th>Date</th><th>Grade</th></tr>
+                    <tr><th>Task</th><th>Course</th><th>Type</th><th>Date</th><th>Grade</th><th>Skills gained</th><th>Link</th></tr>
                     </thead>
                     <tbody>
                     {% for s in submissions %}
@@ -45,10 +45,34 @@
                             <td>{{ s.task.course.name }}</td>
                             <td>{{ s.task.get_task_type_display }}</td>
                             <td>{{ s.submitted_at|date:"M j, Y" }}</td>
-                            <td>{% if s.task.is_graded %}{{ s.grade|default:"—" }}{% else %}—{% endif %}</td>
+                            <td>
+                                {% if s.task.is_graded and s.grade != None %}
+                                    {% if s.task.grading_mode == 'PERCENTAGE' %}
+                                        {{ s.grade|floatformat:0 }} / 100%
+                                    {% else %}
+                                        {{ s.grade|floatformat:0 }} / {{ s.task.max_score|floatformat:0 }}
+                                    {% endif %}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.skills_gained %}
+                                    {{ s.skills_gained|linebreaksbr }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.link %}
+                                    <a href="{{ s.link }}" target="_blank" rel="noopener">Open</a>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="5" class="text-muted">No submissions yet. Submit tasks to build your portfolio.</td></tr>
+                        <tr><td colspan="7" class="text-muted">No submissions yet. Submit tasks to build your portfolio.</td></tr>
                     {% endfor %}
                     </tbody>
                 </table>

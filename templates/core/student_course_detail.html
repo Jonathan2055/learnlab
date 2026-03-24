@@ -75,7 +75,13 @@
                                 <td>{{ t.get_task_type_display }}</td>
                                 <td>
                                     {% if t.is_graded %}
-                                        {% if s and s.grade != None %}{{ s.grade }}{% else %}—{% endif %}
+                                        {% if s and s.grade != None %}
+                                            {% if t.grading_mode == 'PERCENTAGE' %}
+                                                {{ s.grade|floatformat:0 }} / 100%
+                                            {% else %}
+                                                {{ s.grade|floatformat:0 }} / {{ t.max_score|floatformat:0 }}
+                                            {% endif %}
+                                        {% else %}—{% endif %}
                                     {% else %}
                                         —
                                     {% endif %}

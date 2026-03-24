@@ -96,12 +96,22 @@ class Task(models.Model):
         PROJECT = "PROJECT", "Project"
         RESEARCH = "RESEARCH", "Research"
 
+    class GradingMode(models.TextChoices):
+        PERCENTAGE = "PERCENTAGE", "Percentage"
+        POINTS = "POINTS", "Points"
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="tasks")
     title = models.CharField(max_length=200)
     task_type = models.CharField(max_length=20, choices=TaskType.choices, default=TaskType.PROJECT)
     rules = models.TextField(blank=True, help_text="Instructions and rules for the task")
     is_group_task = models.BooleanField(default=False)
     is_graded = models.BooleanField(default=False)
+    grading_mode = models.CharField(
+        max_length=20,
+        choices=GradingMode.choices,
+        default=GradingMode.PERCENTAGE,
+    )
+    max_score = models.DecimalField(max_digits=6, decimal_places=2, default=100)
     due_date = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -150,6 +160,8 @@ class TaskSubmission(models.Model):
         related_name="submissions",
     )
     content = models.TextField(blank=True)
+    link = models.URLField(blank=True)
+    skills_gained = models.TextField(blank=True, help_text="Optional skills the student learned.")
     file = models.FileField(upload_to="submissions/%Y/%m/", blank=True, null=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
     feedback = models.TextField(blank=True)

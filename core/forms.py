@@ -7,9 +7,9 @@ User = get_user_model()
 
 
 class LoginForm(forms.Form):
-    email = forms.EmailField(
-        label="Email Address",
-        widget=forms.EmailInput(attrs={"placeholder": "name@school.edu"}),
+    identifier = forms.CharField(
+        label="Email or Username",
+        widget=forms.TextInput(attrs={"placeholder": "name@school.edu or username"}),
     )
     password = forms.CharField(
         label="Password",
@@ -120,5 +120,5 @@ class SubmissionFeedbackForm(forms.ModelForm):
 class TaskSubmissionForm(forms.ModelForm):
     class Meta:
         model = TaskSubmission
-        fields = ["content", "file"]
+        fields = ["content", "link", "skills_gained", "file"]
 

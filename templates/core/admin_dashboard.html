@@ -38,12 +38,7 @@
             </div>
         {% endif %}
 
-        <form method="get" class="search-row">
-            <input type="hidden" name="tab" value="{{ tab }}">
-            <input class="search-input" type="text" name="q" value="{{ q }}" placeholder="Search…">
-            <button class="btn btn-secondary" type="submit">Search</button>
-            {% if q %}<a class="btn btn-secondary" href="{% url 'admin_dashboard' %}?tab={{ tab }}">Clear</a>{% endif %}
-        </form>
+        
 
         {% if tab == 'users' %}
             <section class="card-grid">
@@ -88,6 +83,12 @@
 
                 <section class="card">
                     <h2>Existing Users</h2>
+                    <form method="get" class="search-row">
+            <input type="hidden" name="tab" value="{{ tab }}">
+            <input class="search-input" type="text" name="q" value="{{ q }}" placeholder="Search…">
+            <button class="btn btn-secondary" type="submit">Search</button>
+            {% if q %}<a class="btn btn-secondary" href="{% url 'admin_dashboard' %}?tab={{ tab }}">Clear</a>{% endif %}
+        </form>
                     <p class="card-subtitle">Edit, delete, and assign students to a class (via Edit).</p>
                     <div class="table-wrapper">
                         <table class="data-table">

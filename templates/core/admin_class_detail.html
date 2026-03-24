@@ -51,7 +51,7 @@
                     </table>
                 </div>
             </section>
-            <section class="card">
+            <!-- <section class="card">
                 <h2>Students ({{ students.count }})</h2>
                 <div class="table-wrapper">
                     <table class="data-table">
@@ -61,6 +61,49 @@
                             <tr><td>{{ s.username }}</td><td>{{ s.email }}</td></tr>
                         {% empty %}
                             <tr><td colspan="2" class="text-muted">No students assigned. Edit a student user and set their class.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section> -->
+            <!-- student card -->
+            <section class="card">
+                <h2>Students ({{ students.count }})</h2>
+
+                {% if unassigned_students %}
+                <form method="post" action="{% url 'admin_class_add_student' classroom.pk %}" style="display:flex; gap:8px; margin-bottom:1rem;">
+                    {% csrf_token %}
+                    <select name="student_id" required style="flex:1;">
+                        <option value="">— Add a student —</option>
+                        {% for s in unassigned_students %}
+                            <option value="{{ s.pk }}">{{ s.username }} ({{ s.email }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+                {% else %}
+                    <p class="text-muted" style="margin-bottom:1rem;">No unassigned students available.</p>
+                {% endif %}
+
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th>Username</th><th>Email</th><th>Actions</th></tr></thead>
+                        <tbody>
+                        {% for s in students %}
+                            <tr>
+                                <td>{{ s.username }}</td>
+                                <td>{{ s.email }}</td>
+                                <td class="table-actions">
+                                    <form method="post" action="{% url 'admin_class_remove_student' classroom.pk s.pk %}"
+                                        class="inline-form"
+                                        onsubmit="return confirm('Remove {{ s.username }} from this class?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="text-muted">No students assigned yet.</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>

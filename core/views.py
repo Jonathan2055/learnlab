@@ -41,12 +41,16 @@ def login_view(request: HttpRequest, admin_login: bool = False) -> HttpResponse:
     form = LoginForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"]
+        identifier = form.cleaned_data["identifier"]
         password = form.cleaned_data["password"]
-        try:
-            user_obj = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
-            user_obj = None
+
+        user_obj = None
+        # Accept either email or username.
+        # If it looks like an email, try email first; otherwise try username.
+        if "@" in identifier:
+            user_obj = User.objects.filter(email__iexact=identifier).first()
+        if not user_obj:
+            user_obj = User.objects.filter(username__iexact=identifier).first()
 
         user = None
         if user_obj:
@@ -202,14 +206,46 @@ def admin_class_detail(request: HttpRequest, classroom_id: int) -> HttpResponse:
     teachers = classroom.teachers.all()
     students = classroom.students.all()
     courses = classroom.courses.all()
+    unassigned_students = User.objects.filter(role=User.Roles.STUDENT, student_class__isnull=True)
+
     context: Dict[str, Any] = {
         "classroom": classroom,
         "teachers": teachers,
         "students": students,
         "courses": courses,
+        "unassigned_students": unassigned_students,
     }
     return render(request, "core/admin_class_detail.html", context)
 
+#assigning student to class
+@login_required
+@_require_admin
+@require_http_methods(["POST"])
+def admin_class_add_student(request: HttpRequest, classroom_id: int) -> HttpResponse:
+    classroom = get_object_or_404(Classroom, pk=classroom_id)
+    student_id = request.POST.get("student_id")
+    student = get_object_or_404(User, pk=student_id, role=User.Roles.STUDENT)
+
+    if student.student_class is not None:
+        messages.error(request, f"{student.username} is already assigned to another class.")
+    else:
+        student.student_class = classroom
+        student.save()
+        messages.success(request, f"{student.username} added to {classroom.name}.")
+
+    return redirect("admin_class_detail", classroom_id=classroom_id)
+
+
+@login_required
+@_require_admin
+@require_http_methods(["POST"])
+def admin_class_remove_student(request: HttpRequest, classroom_id: int, student_id: int) -> HttpResponse:
+    classroom = get_object_or_404(Classroom, pk=classroom_id)
+    student = get_object_or_404(User, pk=student_id, role=User.Roles.STUDENT, student_class=classroom)
+    student.student_class = None
+    student.save()
+    messages.success(request, f"{student.username} removed from {classroom.name}.")
+    return redirect("admin_class_detail", classroom_id=classroom_id)
 
 @login_required
 @_require_admin
@@ -517,10 +553,28 @@ def student_dashboard(request: HttpRequest) -> HttpResponse:
     q = (request.GET.get("q") or "").strip()
     if q and classroom:
         courses = courses.filter(name__icontains=q)
+
+    upcoming_deadlines = []
+    if classroom:
+        from django.utils import timezone
+
+        now = timezone.now()
+        # Completed tasks for the student (individual submissions or any group submissions for groups they belong to)
+        group_ids = list(TaskGroup.objects.filter(students=user).values_list("id", flat=True))
+        completed_task_ids = set(
+            list(TaskSubmission.objects.filter(submitted_by=user).values_list("task_id", flat=True))
+            + list(TaskSubmission.objects.filter(group_id__in=group_ids).values_list("task_id", flat=True))
+        )
+        upcoming_deadlines = (
+            Task.objects.filter(course__classroom=classroom, due_date__isnull=False, due_date__gte=now)
+            .exclude(pk__in=completed_task_ids)
+            .select_related("course", "course__classroom")
+            .order_by("due_date")[:8]
+        )
     return render(
         request,
         "core/student_dashboard.html",
-        {"classroom": classroom, "courses": courses, "q": q},
+        {"classroom": classroom, "courses": courses, "q": q, "upcoming_deadlines": upcoming_deadlines},
     )
 
 
@@ -632,7 +686,7 @@ def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
     from reportlab.pdfgen import canvas
 
     submissions = (
-        TaskSubmission.objects.select_related("task", "task__course")
+        TaskSubmission.objects.select_related("task", "task__course", "task__course__classroom")
         .filter(submitted_by=user)
         .order_by("task__course__name", "task__title")
     )
@@ -655,18 +709,45 @@ def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
     c.setFont("Helvetica", 10)
 
     for s in submissions:
-        line = (
-            f"- {s.task.title} ({s.task.get_task_type_display()}) · "
-            f"{s.task.course.name} · submitted {s.submitted_at.strftime('%Y-%m-%d')}"
-        )
+        grade_text = ""
         if s.task.is_graded and s.grade is not None:
-            line += f" · grade {s.grade}"
+            if s.task.grading_mode == "PERCENTAGE":
+                grade_text = f" · grade {s.grade} / 100%"
+            else:
+                grade_text = f" · grade {s.grade} / {s.task.max_score}"
+
+        link_text = f" · link: {s.link}" if s.link else ""
+
+        base_line = (
+            f"- {s.task.title} ({s.task.get_task_type_display()}) · "
+            f"{s.task.course.name} · submitted {s.submitted_at.strftime('%Y-%m-%d')}{grade_text}{link_text}"
+        )
+
         if y < 72:
             c.showPage()
             y = height - 72
             c.setFont("Helvetica", 10)
-        c.drawString(72, y, line[:120])
+        c.drawString(72, y, base_line[:120])
         y -= 14
+
+        if s.skills_gained:
+            skills = [x.strip() for x in s.skills_gained.splitlines() if x.strip()]
+            if skills:
+                if y < 72:
+                    c.showPage()
+                    y = height - 72
+                    c.setFont("Helvetica", 10)
+                c.drawString(80, y, "Skills:")
+                y -= 12
+                c.setFont("Helvetica", 9)
+                for skill in skills[:8]:
+                    if y < 72:
+                        c.showPage()
+                        y = height - 72
+                        c.setFont("Helvetica", 9)
+                    c.drawString(92, y, f"- {skill}"[:95])
+                    y -= 11
+                c.setFont("Helvetica", 10)
 
     c.showPage()
     c.save()
