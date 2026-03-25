@@ -86,8 +86,12 @@
                 <form method="post" enctype="multipart/form-data" class="stacked-form">
                     {% csrf_token %}
                     <div class="form-field">
-                        <label for="{{ form.content.id_for_label }}">Evidence / Notes (optional)</label>
+                        <label for="{{ form.content.id_for_label }}">Evidence / Notes </label>
                         {{ form.content }}
+                    </div>
+                    <div class="form-field">
+                        <label for="{{ form.file.id_for_label }}">File </label>
+                        {{ form.file }}
                     </div>
                     <div class="form-field">
                         <label for="{{ form.link.id_for_label }}">Link (optional)</label>
@@ -96,10 +100,6 @@
                     <div class="form-field">
                         <label for="{{ form.skills_gained.id_for_label }}">Skills gained (optional)</label>
                         {{ form.skills_gained }}
-                    </div>
-                    <div class="form-field">
-                        <label for="{{ form.file.id_for_label }}">File (optional)</label>
-                        {{ form.file }}
                     </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>

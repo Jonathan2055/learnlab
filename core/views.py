@@ -395,8 +395,20 @@ def teacher_material_upload(request: HttpRequest, course_id: int) -> HttpRespons
     else:
         form = LearningMaterialForm()
     return render(request, "core/teacher_material_form.html", {"form": form, "course": course})
-
-
+#view learning material
+@login_required
+@_require_teacher
+def teacher_material_detail(request: HttpRequest, material_id: int) -> HttpResponse:
+    material = get_object_or_404(LearningMaterial, pk=material_id)
+    if request.user not in material.course.classroom.teachers.all():
+        messages.error(request, "You are not assigned to this class.")
+        return redirect("teacher_dashboard")
+    return render(request, "core/teacher_material_detail.html", {
+        "material": material,
+        "course": material.course,
+        "classroom": material.course.classroom,
+    })
+#Deleting the learning material
 @login_required
 @_require_teacher
 @require_http_methods(["POST"])
@@ -660,6 +672,38 @@ def student_task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
         {"task": task, "course": task.course, "classroom": task.course.classroom, "form": form, "existing": existing, "group": group},
     )
 
+#edit student submission grades
+@login_required
+@require_http_methods(["GET", "POST"])
+def student_submission_edit(request: HttpRequest, submission_id: int) -> HttpResponse:
+    user: User = request.user  # type: ignore[assignment]
+    if user.role != User.Roles.STUDENT:
+        return _redirect_for_role(user)
+
+    submission = get_object_or_404(TaskSubmission, pk=submission_id, submitted_by=user)
+    task = submission.task
+
+    # Block edit if already graded
+    if submission.grade is not None:
+        messages.error(request, "You cannot edit a submission that has already been graded.")
+        return redirect("student_task_detail", task_id=task.pk)
+
+    if request.method == "POST":
+        form = TaskSubmissionForm(request.POST, request.FILES, instance=submission)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Submission updated.")
+            return redirect("student_task_detail", task_id=task.pk)
+    else:
+        form = TaskSubmissionForm(instance=submission)
+
+    return render(request, "core/student_submission_edit.html", {
+        "form": form,
+        "submission": submission,
+        "task": task,
+        "course": task.course,
+        "classroom": task.course.classroom,
+    })
 
 @login_required
 def student_portfolio(request: HttpRequest) -> HttpResponse:

@@ -58,12 +58,16 @@
                     {% for m in materials %}
                         <tr>
                             <td>
-                                {% if m.file %}<a href="{{ m.file.url }}" target="_blank" rel="noopener">{{ m.title }}</a>
-                                {% else %}{{ m.title }}{% endif %}
+                                <a href="{% url 'teacher_material_detail' m.pk %}">{{ m.title }}</a>
                             </td>
                             <td>{{ m.uploaded_at|date:"M j, Y" }}</td>
                             <td class="table-actions">
-                                <form method="post" action="{% url 'teacher_material_delete' m.pk %}" class="inline-form" onsubmit="return confirm('Delete this material?');">
+                                {% if m.file %}
+                                    <a href="{{ m.file.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary">Download</a>
+                                {% endif %}
+                                <form method="post" action="{% url 'teacher_material_delete' m.pk %}"
+                                    class="inline-form"
+                                    onsubmit="return confirm('Delete this material?');">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                 </form>
@@ -79,7 +83,7 @@
 
         <section class="card" style="margin-top: 1.6rem;">
             <h2>Tasks</h2>
-            <a href="{% url 'teacher_task_create' course.pk %}" class="btn btn-secondary">Create Task</a>
+            <a href="{% url 'teacher_task_create' course.pk %}" class="btn btn-primary">Create Task</a>
 
             <p class="card-subtitle">Projects and research assignments.</p>
             <div class="table-wrapper">

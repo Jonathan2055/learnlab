@@ -36,9 +36,10 @@
                     {% if form.title.errors %}<div class="field-error">{{ form.title.errors|striptags }}</div>{% endif %}
                 </div>
                 <div class="form-field">
-                    <label for="{{ form.content.id_for_label }}">Content (optional)</label>
+                    <label for="{{ form.content.id_for_label }}">Content</label>
                     {{ form.content }}
                 </div>
+                
                 <div class="form-field">
                     <label for="{{ form.file.id_for_label }}">File (optional)</label>
                     {{ form.file }}
