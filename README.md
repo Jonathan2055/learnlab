@@ -33,11 +33,20 @@ Then open `http://127.0.0.1:8000/login/` in your browser.
 - Use the **Administrator Login** link at the bottom to go to `/admin-login/`.
 - After a successful Admin login you will be redirected to the custom Admin dashboard.
 
-## Next steps
+## How it works
+- First start by logging in as administrator using the creadentials set when creating a superuser
+- then create teacher and student accounts
+- from there create a class and assign both students and teacher
 
-Planned additions:
-
-- Teacher dashboard: course materials, task assignment, submission review
-- Student dashboard: course/assignment views, submissions, portfolio
-- Course and enrollment models and admin tooling
-
+### Use cases
+#### Teacher's Dashboard
+- Create a course 
+- add learning materials 
+- create task and assign to group when it is group based
+- give feedback 
+#### Student's Dashboard
+- see courses
+- view learning materials 
+- View tasks 
+- create submission
+- see and Download Portfolio

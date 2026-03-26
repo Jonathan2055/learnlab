@@ -33,11 +33,14 @@ urlpatterns = [
     path("teacher/tasks/<int:task_id>/delete/", views.teacher_task_delete, name="teacher_task_delete"),
     path("teacher/tasks/<int:task_id>/groups/create/", views.teacher_task_group_create, name="teacher_task_group_create"),
     path("teacher/submissions/<int:submission_id>/grade/", views.teacher_submission_grade, name="teacher_submission_grade"),
-    path("student/submissions/<int:submission_id>/edit/", views.student_submission_edit, name="student_submission_edit"),
+    # path("student/submissions/<int:submission_id>/edit/", views.student_submission_edit, name="student_submission_edit"),
+    #submission testing
+    path("teacher/submissions/<int:submission_id>/", views.teacher_submission_detail, name="teacher_submission_detail"),
     # Student
     path("student/dashboard/", views.student_dashboard, name="student_dashboard"),
     path("student/courses/<int:course_id>/", views.student_course_detail, name="student_course_detail"),
     path("student/tasks/<int:task_id>/", views.student_task_detail, name="student_task_detail"),
     path("student/portfolio/", views.student_portfolio, name="student_portfolio"),
     path("student/portfolio/pdf/", views.student_portfolio_pdf, name="student_portfolio_pdf"),
+    path("student/materials/<int:material_id>/", views.student_material_detail, name="student_material_detail"),
 ]

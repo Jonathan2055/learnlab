@@ -1,0 +1,126 @@
+{% extends "core/base.html" %}
+
+{% block title %}{{ submission.submitted_by.username }}'s Submission – {{ task.title }}{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">My Classes</a>
+            <a href="{% url 'teacher_course_detail' course.pk %}" class="sidebar-link">{{ course.name }}</a>
+            <a href="{% url 'teacher_task_detail' task.pk %}" class="sidebar-link sidebar-link-active">{{ task.title }}</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'teacher_task_detail' task.pk %}" class="back-link">← Back to {{ task.title }}</a>
+            <div class="card-header-row">
+                <h1>{{ submission.submitted_by.get_full_name|default:submission.submitted_by.username }}'s Submission</h1>
+                <a href="{% url 'teacher_submission_grade' submission.pk %}" class="btn btn-primary">Feedback / Grade</a>
+            </div>
+            <p class="text-muted">
+                Submitted {{ submission.submitted_at|date:"M j, Y H:i" }}
+                {% if submission.group %} · Group: <strong>{{ submission.group.name }}</strong>{% endif %}
+            </p>
+        </header>
+
+        {% if messages %}
+        <div class="dashboard-messages">
+            {% for message in messages %}
+                <div class="dashboard-message dashboard-message-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Submission content -->
+        {% if submission.content %}
+        <section class="card">
+            <h2>Written Response</h2>
+            <div style="white-space: pre-wrap; line-height: 1.8; color: var(--color-text, #222);">{{ submission.content }}</div>
+        </section>
+        {% endif %}
+
+        <!-- Link -->
+        {% if submission.link %}
+        <section class="card" style="margin-top: 1.2rem;">
+            <h2>Submitted Link</h2>
+            <a href="{{ submission.link }}" target="_blank" rel="noopener"
+               style="word-break: break-all;">{{ submission.link }}</a>
+        </section>
+        {% endif %}
+
+        <!-- File -->
+        {% if submission.file %}
+        <section class="card" style="margin-top: 1.2rem;">
+            <h2>Attached File</h2>
+            {% with submission.file.name as fname %}
+                {% if ".pdf" in fname %}
+                    <iframe src="{{ submission.file.url }}"
+                            style="width:100%; height:620px; border:none; border-radius:8px;"></iframe>
+                {% elif ".png" in fname or ".jpg" in fname or ".jpeg" in fname or ".gif" in fname or ".webp" in fname %}
+                    <img src="{{ submission.file.url }}" alt="Submission file"
+                         style="max-width:100%; border-radius:8px; border:1px solid #e0e0e0;">
+                {% else %}
+                    <a href="{{ submission.file.url }}" class="btn btn-secondary"
+                       target="_blank" rel="noopener">Download File</a>
+                {% endif %}
+            {% endwith %}
+        </section>
+        {% endif %}
+
+        {% if not submission.content and not submission.link and not submission.file %}
+        <section class="card">
+            <p class="text-muted">This submission has no content, link, or file attached.</p>
+        </section>
+        {% endif %}
+
+        <!-- Skills gained (if student filled it) -->
+        {% if submission.skills_gained %}
+        <section class="card" style="margin-top: 1.2rem;">
+            <h2>Skills Gained</h2>
+            <ul style="margin:0; padding-left: 1.2rem; line-height:1.8;">
+                {% for skill in submission.skills_gained.splitlines %}
+                    {% if skill.strip %}
+                        <li>{{ skill.strip }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+
+        <!-- Existing feedback -->
+        {% if submission.feedback or submission.grade is not None %}
+        <section class="card" style="margin-top: 1.2rem;">
+            <h2>Current Feedback</h2>
+            {% if task.is_graded and submission.grade is not None %}
+                <p><strong>Grade:</strong>
+                    {{ submission.grade }}
+                    {% if task.grading_mode == "PERCENTAGE" %}/100%{% else %}/{{ task.max_score }}{% endif %}
+                </p>
+            {% endif %}
+            {% if submission.feedback %}
+                <p><strong>Feedback:</strong></p>
+                <div style="white-space: pre-wrap; line-height:1.7;">{{ submission.feedback }}</div>
+            {% endif %}
+            {% if submission.graded_by %}
+                <p class="text-muted" style="margin-top:0.8rem; font-size:13px;">
+                    Graded by {{ submission.graded_by.username }}
+                    {% if submission.graded_at %}on {{ submission.graded_at|date:"M j, Y H:i" }}{% endif %}
+                </p>
+            {% endif %}
+        </section>
+        {% endif %}
+
+    </main>
+</div>
+{% endblock %}

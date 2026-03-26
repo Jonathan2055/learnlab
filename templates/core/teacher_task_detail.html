@@ -53,49 +53,75 @@
 
         {% if task.is_group_task %}
         <section class="card">
-            <h2>Groups</h2>
-            <p class="card-subtitle">Groups for this task. One student per group can submit.</p>
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead><tr><th>Group</th><th>Members</th></tr></thead>
-                    <tbody>
-                    {% for g in groups %}
-                        <tr>
-                            <td>{{ g.name }}</td>
-                            <td>{% for s in g.students.all %}{{ s.username }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="2" class="text-muted">No groups yet. <a href="{% url 'teacher_task_group_create' task.pk %}">Create a group</a>.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-        {% endif %}
+                    <h2>Groups</h2>
+                    <p class="card-subtitle">Groups for this task. One student per group can submit.</p>
+                    <div class="table-wrapper" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                        <table class="data-table" style="min-width: 500px; width: 100%;"> 
+                            <thead><tr><th>Group</th><th>Members</th></tr></thead>
+                            <tbody>
+                            {% for g in groups %}
+                                <tr>
+                                    <td>{{ g.name }}</td>
+                                    <td>{% for s in g.students.all %}{{ s.username }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="2" class="text-muted">No groups yet. <a href="{% url 'teacher_task_group_create' task.pk %}">Create a group</a>.</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                {% endif %}
 
-        <section class="card" style="margin-top: 1.6rem;">
+                <section class="card" style="margin-top: 1.6rem;">
             <h2>Submissions</h2>
             <p class="card-subtitle">Review and give feedback or grades.</p>
-            <div class="table-wrapper">
-                <table class="data-table">
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table class="data-table" style="min-width: 700px; width: 100%;">
                     <thead>
-                    <tr><th>Submitted by</th><th>Group</th><th>Date</th><th>Grade</th><th>Actions</th></tr>
+                        <tr>
+                            <th>Submitted by</th>
+                            <th>Group</th>
+                            <th>Date</th>
+                            <th>Grade</th>
+                            <th>Feedback</th>
+                            <th>Actions</th>
+                        </tr>
                     </thead>
                     <tbody>
                     {% for s in submissions %}
                         <tr>
-                            <td>{{ s.submitted_by.username }}</td>
+                            <td style="max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                                title="{{ s.submitted_by.username }}">
+                                {{ s.submitted_by.username }}
+                            </td>
                             <td>{{ s.group.name|default:"—" }}</td>
-                            <td>{{ s.submitted_at|date:"M j, Y H:i" }}</td>
-                            <td>{{ s.grade|default:"—" }}</td>
-                            <td class="table-actions">
-                                {% if s.content %}<span class="submission-preview" title="{{ s.content|truncatewords:30 }}">📄</span>{% endif %}
-                                {% if s.file %}<a href="{{ s.file.url }}" target="_blank" rel="noopener" class="btn btn-sm btn-secondary">File</a>{% endif %}
-                                <a href="{% url 'teacher_submission_grade' s.pk %}" class="btn btn-sm btn-primary">Feedback / Grade</a>
+                            <td style="white-space: nowrap;">{{ s.submitted_at|date:"M j, Y H:i" }}</td>
+                            <td>
+                                {% if task.is_graded %}
+                                    {% if s.grade is not None %}
+                                        {{ s.grade }}{% if task.grading_mode == "PERCENTAGE" %}/100%{% else %}/{{ task.max_score }}{% endif %}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if s.feedback %}
+                                    <span style="color: green; font-size: 12px; white-space: nowrap;">✓ Given</span>
+                                {% else %}
+                                    <span style="color: #aaa; font-size: 12px; white-space: nowrap;">None</span>
+                                {% endif %}
+                            </td>
+                            <td class="table-actions" style="white-space: nowrap;">
+                                <a href="{% url 'teacher_submission_detail' s.pk %}" class="btn btn-sm btn-secondary">View</a>
+                                <a href="{% url 'teacher_submission_grade' s.pk %}" class="btn btn-sm btn-primary">Grade</a>
                             </td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="5" class="text-muted">No submissions yet.</td></tr>
+                        <tr><td colspan="6" class="text-muted">No submissions yet.</td></tr>
                     {% endfor %}
                     </tbody>
                 </table>

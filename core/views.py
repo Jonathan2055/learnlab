@@ -526,6 +526,21 @@ def teacher_task_group_create(request: HttpRequest, task_id: int) -> HttpRespons
     return render(request, "core/teacher_group_form.html", {"form": form, "task": task})
 
 
+#testing submissions
+@login_required
+@_require_teacher
+def teacher_submission_detail(request: HttpRequest, submission_id: int) -> HttpResponse:
+    submission = get_object_or_404(TaskSubmission, pk=submission_id)
+    if request.user not in submission.task.course.classroom.teachers.all():
+        messages.error(request, "You are not assigned to this class.")
+        return redirect("teacher_dashboard")
+    return render(request, "core/teacher_submission_detail.html", {
+        "submission": submission,
+        "task": submission.task,
+        "course": submission.task.course,
+        "classroom": submission.task.course.classroom,
+    })
+
 @login_required
 @_require_teacher
 @require_http_methods(["GET", "POST"])
@@ -625,6 +640,22 @@ def student_course_detail(request: HttpRequest, course_id: int) -> HttpResponse:
         },
     )
 
+# view learning materials
+@login_required
+def student_material_detail(request: HttpRequest, material_id: int) -> HttpResponse:
+    user: User = request.user  # type: ignore[assignment]
+    if user.role != User.Roles.STUDENT:
+        return _redirect_for_role(user)
+    material = get_object_or_404(LearningMaterial, pk=material_id)
+    if not user.student_class or material.course.classroom_id != user.student_class_id:
+        messages.error(request, "You do not have access to this material.")
+        return redirect("student_dashboard")
+    return render(request, "core/student_material_detail.html", {
+        "material": material,
+        "course": material.course,
+        "classroom": material.course.classroom,
+    })
+
 
 @login_required
 @require_http_methods(["GET", "POST"])
@@ -673,37 +704,37 @@ def student_task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
     )
 
 #edit student submission grades
-@login_required
-@require_http_methods(["GET", "POST"])
-def student_submission_edit(request: HttpRequest, submission_id: int) -> HttpResponse:
-    user: User = request.user  # type: ignore[assignment]
-    if user.role != User.Roles.STUDENT:
-        return _redirect_for_role(user)
+# @login_required
+# @require_http_methods(["GET", "POST"])
+# def student_submission_edit(request: HttpRequest, submission_id: int) -> HttpResponse:
+#     user: User = request.user  # type: ignore[assignment]
+#     if user.role != User.Roles.STUDENT:
+#         return _redirect_for_role(user)
 
-    submission = get_object_or_404(TaskSubmission, pk=submission_id, submitted_by=user)
-    task = submission.task
+#     submission = get_object_or_404(TaskSubmission, pk=submission_id, submitted_by=user)
+#     task = submission.task
 
-    # Block edit if already graded
-    if submission.grade is not None:
-        messages.error(request, "You cannot edit a submission that has already been graded.")
-        return redirect("student_task_detail", task_id=task.pk)
+#     # Block edit if already graded
+#     if submission.grade is not None:
+#         messages.error(request, "You cannot edit a submission that has already been graded.")
+#         return redirect("student_task_detail", task_id=task.pk)
 
-    if request.method == "POST":
-        form = TaskSubmissionForm(request.POST, request.FILES, instance=submission)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Submission updated.")
-            return redirect("student_task_detail", task_id=task.pk)
-    else:
-        form = TaskSubmissionForm(instance=submission)
+#     if request.method == "POST":
+#         form = TaskSubmissionForm(request.POST, request.FILES, instance=submission)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, "Submission updated.")
+#             return redirect("student_task_detail", task_id=task.pk)
+#     else:
+#         form = TaskSubmissionForm(instance=submission)
 
-    return render(request, "core/student_submission_edit.html", {
-        "form": form,
-        "submission": submission,
-        "task": task,
-        "course": task.course,
-        "classroom": task.course.classroom,
-    })
+#     return render(request, "core/student_submission_edit.html", {
+#         "form": form,
+#         "submission": submission,
+#         "task": task,
+#         "course": task.course,
+#         "classroom": task.course.classroom,
+#     })
 
 @login_required
 def student_portfolio(request: HttpRequest) -> HttpResponse:
@@ -718,7 +749,89 @@ def student_portfolio(request: HttpRequest) -> HttpResponse:
     )
     return render(request, "core/student_portfolio.html", {"submissions": submissions})
 
+#Downloading portfolio
+# @login_required
+# def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
+#     user: User = request.user  # type: ignore[assignment]
+#     if user.role != User.Roles.STUDENT:
+#         return _redirect_for_role(user)
 
+#     from io import BytesIO
+#     from reportlab.lib.pagesizes import letter
+#     from reportlab.pdfgen import canvas
+
+#     submissions = (
+#         TaskSubmission.objects.select_related("task", "task__course", "task__course__classroom")
+#         .filter(submitted_by=user)
+#         .order_by("task__course__name", "task__title")
+#     )
+
+#     buffer = BytesIO()
+#     c = canvas.Canvas(buffer, pagesize=letter)
+#     width, height = letter
+
+#     y = height - 72
+#     c.setFont("Helvetica-Bold", 16)
+#     c.drawString(72, y, "LearnLab – Student Portfolio")
+#     y -= 22
+#     c.setFont("Helvetica", 12)
+#     c.drawString(72, y, f"Student: {user.get_full_name() or user.username}")
+#     y -= 28
+
+#     c.setFont("Helvetica-Bold", 12)
+#     c.drawString(72, y, "Completed work (submitted tasks/projects)")
+#     y -= 18
+#     c.setFont("Helvetica", 10)
+
+#     for s in submissions:
+#         grade_text = ""
+#         if s.task.is_graded and s.grade is not None:
+#             if s.task.grading_mode == "PERCENTAGE":
+#                 grade_text = f" · grade {s.grade} / 100%"
+#             else:
+#                 grade_text = f" · grade {s.grade} / {s.task.max_score}"
+
+#         link_text = f" · link: {s.link}" if s.link else ""
+
+#         base_line = (
+#             f"- {s.task.title} ({s.task.get_task_type_display()}) · "
+#             f"{s.task.course.name} · submitted {s.submitted_at.strftime('%Y-%m-%d')}{grade_text}{link_text}"
+#         )
+
+#         if y < 72:
+#             c.showPage()
+#             y = height - 72
+#             c.setFont("Helvetica", 10)
+#         c.drawString(72, y, base_line[:120])
+#         y -= 14
+
+#         if s.skills_gained:
+#             skills = [x.strip() for x in s.skills_gained.splitlines() if x.strip()]
+#             if skills:
+#                 if y < 72:
+#                     c.showPage()
+#                     y = height - 72
+#                     c.setFont("Helvetica", 10)
+#                 c.drawString(80, y, "Skills:")
+#                 y -= 12
+#                 c.setFont("Helvetica", 9)
+#                 for skill in skills[:8]:
+#                     if y < 72:
+#                         c.showPage()
+#                         y = height - 72
+#                         c.setFont("Helvetica", 9)
+#                     c.drawString(92, y, f"- {skill}"[:95])
+#                     y -= 11
+#                 c.setFont("Helvetica", 10)
+
+#     c.showPage()
+#     c.save()
+#     buffer.seek(0)
+
+#     from django.http import FileResponse
+
+#     filename = f"learnlab_portfolio_{user.username}.pdf"
+#     return FileResponse(buffer, as_attachment=True, filename=filename)
 @login_required
 def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
     user: User = request.user  # type: ignore[assignment]
@@ -726,8 +839,16 @@ def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
         return _redirect_for_role(user)
 
     from io import BytesIO
+    from django.utils import timezone
     from reportlab.lib.pagesizes import letter
-    from reportlab.pdfgen import canvas
+    from reportlab.lib import colors
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
+        HRFlowable, KeepTogether
+    )
+    from reportlab.lib.enums import TA_LEFT, TA_RIGHT
 
     submissions = (
         TaskSubmission.objects.select_related("task", "task__course", "task__course__classroom")
@@ -736,68 +857,184 @@ def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
     )
 
     buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
 
-    y = height - 72
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(72, y, "LearnLab – Student Portfolio")
-    y -= 22
-    c.setFont("Helvetica", 12)
-    c.drawString(72, y, f"Student: {user.get_full_name() or user.username}")
-    y -= 28
+    HEADER_H = 1.8 * inch
 
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(72, y, "Completed work (submitted tasks/projects)")
-    y -= 18
-    c.setFont("Helvetica", 10)
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=0.75 * inch,
+        leftMargin=0.75 * inch,
+        topMargin=HEADER_H + 0.3 * inch,   # this line makes content start bellow header
+        bottomMargin=0.6 * inch,
+    )
+    BRAND       = colors.HexColor("#4F46E5")
+    BRAND_LIGHT = colors.HexColor("#EEF2FF")
+    ACCENT      = colors.HexColor("#059669")
+    MUTED       = colors.HexColor("#6B7280")
+    DARK        = colors.HexColor("#111827")
+    BORDER      = colors.HexColor("#E5E7EB")
+    WHITE       = colors.white
 
-    for s in submissions:
-        grade_text = ""
-        if s.task.is_graded and s.grade is not None:
-            if s.task.grading_mode == "PERCENTAGE":
-                grade_text = f" · grade {s.grade} / 100%"
-            else:
-                grade_text = f" · grade {s.grade} / {s.task.max_score}"
+    def ps(name, **kw):
+        return ParagraphStyle(name, **kw)
 
-        link_text = f" · link: {s.link}" if s.link else ""
+    S_SECTION = ps("Section",
+        fontSize=12, leading=16, textColor=BRAND,
+        fontName="Helvetica-Bold", spaceBefore=14, spaceAfter=4)
 
-        base_line = (
-            f"- {s.task.title} ({s.task.get_task_type_display()}) · "
-            f"{s.task.course.name} · submitted {s.submitted_at.strftime('%Y-%m-%d')}{grade_text}{link_text}"
-        )
+    S_TASK_TITLE = ps("TaskTitle",
+        fontSize=11, leading=15, textColor=DARK, fontName="Helvetica-Bold")
 
-        if y < 72:
-            c.showPage()
-            y = height - 72
-            c.setFont("Helvetica", 10)
-        c.drawString(72, y, base_line[:120])
-        y -= 14
+    S_GRADE = ps("Grade",
+        fontSize=10, leading=14, textColor=ACCENT,
+        fontName="Helvetica-Bold", alignment=TA_RIGHT)
 
-        if s.skills_gained:
-            skills = [x.strip() for x in s.skills_gained.splitlines() if x.strip()]
-            if skills:
-                if y < 72:
-                    c.showPage()
-                    y = height - 72
-                    c.setFont("Helvetica", 10)
-                c.drawString(80, y, "Skills:")
-                y -= 12
-                c.setFont("Helvetica", 9)
-                for skill in skills[:8]:
-                    if y < 72:
-                        c.showPage()
-                        y = height - 72
-                        c.setFont("Helvetica", 9)
-                    c.drawString(92, y, f"- {skill}"[:95])
-                    y -= 11
-                c.setFont("Helvetica", 10)
+    S_META = ps("Meta",
+        fontSize=9, leading=13, textColor=MUTED, fontName="Helvetica")
 
-    c.showPage()
-    c.save()
+    S_BODY = ps("Body",
+        fontSize=9, leading=14, textColor=DARK, fontName="Helvetica")
+
+    S_LINK = ps("Link",
+        fontSize=8, leading=12, textColor=BRAND, fontName="Helvetica")
+
+    S_SKILL = ps("Skill",
+        fontSize=8, leading=12, textColor=colors.HexColor("#374151"),
+        fontName="Helvetica")
+
+    def draw_page(canv, doc_obj):
+        w, h = letter
+
+        # set header background to indigo 
+        canv.setFillColor(BRAND)
+        canv.rect(0, h - HEADER_H, w, HEADER_H, fill=True, stroke=False)
+
+        # Header texts
+        canv.setFillColor(WHITE)
+        canv.setFont("Helvetica-Bold", 28)
+        canv.drawString(0.75 * inch, h - 0.85 * inch, "LearnLab")
+
+        canv.setFillColor(colors.HexColor("#C7D2FE"))
+        canv.setFont("Helvetica", 11)
+        canv.drawString(0.75 * inch, h - 1.15 * inch, "Student Portfolio")
+
+        # show full name when it's different from username
+        full_name = user.get_full_name()
+        if full_name and full_name.strip() and full_name.strip() != user.username:
+            info_line = f"{full_name}  ·  {user.email or user.username}"
+        else:
+            info_line = user.email or user.username
+
+        canv.setFillColor(colors.HexColor("#A5B4FC"))
+        canv.setFont("Helvetica", 9)
+        canv.drawString(0.75 * inch, h - 1.42 * inch, info_line)
+
+        # setting Date 
+        canv.setFillColor(colors.HexColor("#C7D2FE"))
+        canv.setFont("Helvetica", 8)
+        date_str = timezone.now().strftime("%B %d, %Y")
+        canv.drawRightString(w - 0.75 * inch, h - 0.85 * inch, date_str)
+
+
+        canv.setFillColor(BRAND_LIGHT)
+        canv.rect(0, 0, w, 0.45 * inch, fill=True, stroke=False)
+
+        canv.setFillColor(MUTED)
+        canv.setFont("Helvetica", 8)
+        canv.drawCentredString(w / 2, 0.16 * inch,
+            f"LearnLab  ·  {user.email or user.username}  ·  Generated {date_str}")
+        canv.drawRightString(w - 0.75 * inch, 0.16 * inch, f"Page {doc_obj.page}")
+
+    story = []
+
+    submissions_list = list(submissions)
+
+    if not submissions_list:
+        story.append(Paragraph("No submissions yet.", S_BODY))
+    else:
+        from itertools import groupby
+
+        for course_name, group_iter in groupby(submissions_list, key=lambda s: s.task.course.name):
+            group = list(group_iter)
+
+            story.append(HRFlowable(width="100%", thickness=1, color=BRAND, spaceAfter=4))
+            story.append(Paragraph(course_name.upper(), S_SECTION))
+            story.append(Spacer(1, 4))
+
+            for s in group:
+                if s.task.is_graded:
+                    if s.grade is not None:
+                        suffix = "/ 100%" if s.task.grading_mode == "PERCENTAGE" else f"/ {s.task.max_score:.0f}"
+                        grade_str = f"{s.grade:.0f} {suffix}"
+                    else:
+                        grade_str = "Pending"
+                else:
+                    grade_str = "Ungraded"
+
+                mode = "Group" if s.task.is_group_task else "Individual"
+                meta_parts = [
+                    s.task.get_task_type_display(),
+                    mode,
+                    f"Submitted {s.submitted_at.strftime('%b %d, %Y')}",
+                ]
+                if s.task.due_date:
+                    meta_parts.append(f"Due {s.task.due_date.strftime('%b %d, %Y')}")
+
+                # Title and grade row
+                title_grade = Table(
+                    [[Paragraph(s.task.title, S_TASK_TITLE),
+                      Paragraph(grade_str, S_GRADE)]],
+                    colWidths=["68%", "32%"]
+                )
+                title_grade.setStyle(TableStyle([
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+                ]))
+
+                card_rows = [
+                    [title_grade],
+                    [Paragraph("  ·  ".join(meta_parts), S_META)],
+                ]
+
+                if s.link:
+                    short_link = s.link[:90] + ("…" if len(s.link) > 90 else "")
+                    card_rows.append([Paragraph(f"🔗 {short_link}", S_LINK)])
+
+                if s.feedback:
+                    fb = s.feedback[:300] + ("…" if len(s.feedback) > 300 else "")
+                    card_rows.append([Paragraph(f"<b>Feedback:</b> {fb}", S_BODY)])
+
+                if s.skills_gained:
+                    skills = [x.strip() for x in s.skills_gained.splitlines() if x.strip()]
+                    if skills:
+                        card_rows.append([Paragraph("<b>Skills gained:</b>", S_BODY)])
+                        for sk in skills[:10]:
+                            card_rows.append([Paragraph(f"  • {sk}", S_SKILL)])
+
+                card = Table(card_rows, colWidths=["100%"])
+                card.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9FAFB")),
+                    ("BOX", (0, 0), (-1, -1), 0.5, BORDER),
+                    ("ROUNDEDCORNERS", [6]),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                    ("TOPPADDING", (0, 0), (0, 0), 9),
+                    ("TOPPADDING", (0, 1), (-1, -1), 3),
+                    ("BOTTOMPADDING", (0, -1), (-1, -1), 10),
+                ]))
+
+                story.append(KeepTogether([card, Spacer(1, 8)]))
+
+    doc.build(story, onFirstPage=draw_page, onLaterPages=draw_page)
     buffer.seek(0)
 
     from django.http import FileResponse
-
-    filename = f"learnlab_portfolio_{user.username}.pdf"
-    return FileResponse(buffer, as_attachment=True, filename=filename)
+    return FileResponse(
+        buffer,
+        as_attachment=True,
+        filename=f"learnlab_portfolio_{user.username}.pdf"
+    )

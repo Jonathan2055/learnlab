@@ -47,10 +47,7 @@
                         <tbody>
                         {% for m in materials %}
                             <tr>
-                                <td>
-                                    {% if m.file %}<a href="{{ m.file.url }}" target="_blank" rel="noopener">{{ m.title }}</a>
-                                    {% else %}{{ m.title }}{% endif %}
-                                </td>
+                                <td><a href="{% url 'student_material_detail' m.pk %}">{{ m.title }}</a></td>
                                 <td>{{ m.uploaded_at|date:"M j, Y" }}</td>
                             </tr>
                         {% empty %}
