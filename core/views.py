@@ -109,7 +109,7 @@ def _require_teacher(view):
     return wrapped
 
 
-# ---- Admin Dashboard ----
+#  Admin Dashboard 
 @login_required
 @_require_admin
 def admin_dashboard(request: HttpRequest) -> HttpResponse:
@@ -149,7 +149,7 @@ def admin_dashboard(request: HttpRequest) -> HttpResponse:
     }
     return render(request, "core/admin_dashboard.html", context)
 
-
+# Edit users
 @login_required
 @_require_admin
 @require_http_methods(["GET", "POST"])
@@ -170,7 +170,7 @@ def admin_user_edit(request: HttpRequest, user_id: int) -> HttpResponse:
 
     return render(request, "core/admin_user_edit.html", {"form": form, "target_user": target})
 
-
+# delete user
 @login_required
 @_require_admin
 @require_http_methods(["POST"])
@@ -183,7 +183,7 @@ def admin_user_delete(request: HttpRequest, user_id: int) -> HttpResponse:
         messages.success(request, "User deleted.")
     return redirect("admin_dashboard")
 
-
+#creation of a class
 @login_required
 @_require_admin
 @require_http_methods(["GET", "POST"])
@@ -198,7 +198,7 @@ def admin_class_create(request: HttpRequest) -> HttpResponse:
         form = ClassroomForm()
     return render(request, "core/admin_class_form.html", {"form": form, "classroom": None})
 
-
+#Viewing class details
 @login_required
 @_require_admin
 def admin_class_detail(request: HttpRequest, classroom_id: int) -> HttpResponse:
@@ -216,6 +216,33 @@ def admin_class_detail(request: HttpRequest, classroom_id: int) -> HttpResponse:
         "unassigned_students": unassigned_students,
     }
     return render(request, "core/admin_class_detail.html", context)
+
+# Edit a class
+@login_required
+@_require_admin
+@require_http_methods(["GET", "POST"])
+def admin_class_edit(request: HttpRequest, course_id: int) -> HttpResponse:
+    classroom = get_object_or_404(Classroom, pk=course_id)
+    if request.method == "POST":
+        form = ClassroomForm(request.POST, instance=classroom)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Class updated.")
+            return redirect("admin_class_detail", classroom_id=classroom.pk)
+    else:
+        form = ClassroomForm(instance=classroom)
+    return render(request, "core/admin_class_form.html", {"form": form, "classroom": classroom})
+
+#editting a class
+@login_required
+@_require_admin
+@require_http_methods(["POST"])
+def admin_class_delete(request: HttpRequest, course_id: int) -> HttpResponse:
+    classroom = get_object_or_404(Classroom, pk=course_id)
+    name = classroom.name
+    classroom.delete()
+    messages.success(request, f"Class «{name}» deleted.")
+    return redirect("admin_dashboard")
 
 #assigning student to class
 @login_required
@@ -235,7 +262,7 @@ def admin_class_add_student(request: HttpRequest, classroom_id: int) -> HttpResp
 
     return redirect("admin_class_detail", classroom_id=classroom_id)
 
-
+#remove a student in a class
 @login_required
 @_require_admin
 @require_http_methods(["POST"])
@@ -247,33 +274,9 @@ def admin_class_remove_student(request: HttpRequest, classroom_id: int, student_
     messages.success(request, f"{student.username} removed from {classroom.name}.")
     return redirect("admin_class_detail", classroom_id=classroom_id)
 
-@login_required
-@_require_admin
-@require_http_methods(["GET", "POST"])
-def admin_class_edit(request: HttpRequest, course_id: int) -> HttpResponse:
-    classroom = get_object_or_404(Classroom, pk=course_id)
-    if request.method == "POST":
-        form = ClassroomForm(request.POST, instance=classroom)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Class updated.")
-            return redirect("admin_class_detail", classroom_id=classroom.pk)
-    else:
-        form = ClassroomForm(instance=classroom)
-    return render(request, "core/admin_class_form.html", {"form": form, "classroom": classroom})
 
 
-@login_required
-@_require_admin
-@require_http_methods(["POST"])
-def admin_class_delete(request: HttpRequest, course_id: int) -> HttpResponse:
-    classroom = get_object_or_404(Classroom, pk=course_id)
-    name = classroom.name
-    classroom.delete()
-    messages.success(request, f"Class «{name}» deleted.")
-    return redirect("admin_dashboard")
-
-
+#Creating a course in a class
 @login_required
 @_require_admin
 @require_http_methods(["GET", "POST"])
@@ -289,7 +292,7 @@ def admin_course_create(request: HttpRequest, classroom_id: int) -> HttpResponse
         form = CourseForm(initial={"classroom": classroom})
     return render(request, "core/admin_course_form.html", {"form": form, "classroom": classroom, "course": None})
 
-
+#Editing a course
 @login_required
 @_require_admin
 @require_http_methods(["GET", "POST"])
@@ -309,7 +312,7 @@ def admin_course_edit(request: HttpRequest, course_id: int) -> HttpResponse:
         {"form": form, "classroom": course.classroom, "course": course},
     )
 
-
+#Deleting a course
 @login_required
 @_require_admin
 @require_http_methods(["POST"])
@@ -322,7 +325,7 @@ def admin_course_delete(request: HttpRequest, course_id: int) -> HttpResponse:
     return redirect("admin_class_detail", classroom_id=classroom_id)
 
 
-# ---- Teacher Dashboard ----
+# Teacher Dashboard 
 @login_required
 @_require_teacher
 def teacher_dashboard(request: HttpRequest) -> HttpResponse:
@@ -332,7 +335,7 @@ def teacher_dashboard(request: HttpRequest) -> HttpResponse:
         classrooms = classrooms.filter(name__icontains=q)
     return render(request, "core/teacher_dashboard.html", {"classrooms": classrooms, "q": q})
 
-
+#Viewing class details
 @login_required
 @_require_teacher
 def teacher_class_detail(request: HttpRequest, classroom_id: int) -> HttpResponse:
@@ -348,7 +351,7 @@ def teacher_class_detail(request: HttpRequest, classroom_id: int) -> HttpRespons
     }
     return render(request, "core/teacher_class_detail.html", context)
 
-
+#Viewing course details
 @login_required
 @_require_teacher
 def teacher_course_detail(request: HttpRequest, course_id: int) -> HttpResponse:
@@ -373,7 +376,7 @@ def teacher_course_detail(request: HttpRequest, course_id: int) -> HttpResponse:
     }
     return render(request, "core/teacher_course_detail.html", context)
 
-
+#Uploading learning material
 @login_required
 @_require_teacher
 @require_http_methods(["GET", "POST"])
@@ -395,6 +398,7 @@ def teacher_material_upload(request: HttpRequest, course_id: int) -> HttpRespons
     else:
         form = LearningMaterialForm()
     return render(request, "core/teacher_material_form.html", {"form": form, "course": course})
+
 #view learning material
 @login_required
 @_require_teacher
@@ -408,6 +412,7 @@ def teacher_material_detail(request: HttpRequest, material_id: int) -> HttpRespo
         "course": material.course,
         "classroom": material.course.classroom,
     })
+
 #Deleting the learning material
 @login_required
 @_require_teacher
@@ -422,7 +427,7 @@ def teacher_material_delete(request: HttpRequest, material_id: int) -> HttpRespo
     messages.success(request, "Material deleted.")
     return redirect("teacher_course_detail", course_id=course_id)
 
-
+#Creating a task
 @login_required
 @_require_teacher
 @require_http_methods(["GET", "POST"])
@@ -445,7 +450,7 @@ def teacher_task_create(request: HttpRequest, course_id: int) -> HttpResponse:
         form = TaskForm()
     return render(request, "core/teacher_task_form.html", {"form": form, "course": course, "task": None})
 
-
+#viewing task details
 @login_required
 @_require_teacher
 def teacher_task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
@@ -464,7 +469,7 @@ def teacher_task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
     }
     return render(request, "core/teacher_task_detail.html", context)
 
-
+#editing a task
 @login_required
 @_require_teacher
 @require_http_methods(["GET", "POST"])
@@ -484,7 +489,7 @@ def teacher_task_edit(request: HttpRequest, task_id: int) -> HttpResponse:
         form = TaskForm(instance=task)
     return render(request, "core/teacher_task_form.html", {"form": form, "course": task.course, "task": task})
 
-
+#Deleting a task
 @login_required
 @_require_teacher
 @require_http_methods(["POST"])
@@ -498,7 +503,7 @@ def teacher_task_delete(request: HttpRequest, task_id: int) -> HttpResponse:
     messages.success(request, "Task deleted.")
     return redirect("teacher_course_detail", course_id=course_id)
 
-
+#creating groups
 @login_required
 @_require_teacher
 @require_http_methods(["GET", "POST"])
@@ -526,7 +531,7 @@ def teacher_task_group_create(request: HttpRequest, task_id: int) -> HttpRespons
     return render(request, "core/teacher_group_form.html", {"form": form, "task": task})
 
 
-#testing submissions
+#Viewing submissions
 @login_required
 @_require_teacher
 def teacher_submission_detail(request: HttpRequest, submission_id: int) -> HttpResponse:
@@ -540,7 +545,7 @@ def teacher_submission_detail(request: HttpRequest, submission_id: int) -> HttpR
         "course": submission.task.course,
         "classroom": submission.task.course.classroom,
     })
-
+#Grading submission
 @login_required
 @_require_teacher
 @require_http_methods(["GET", "POST"])
@@ -568,7 +573,7 @@ def teacher_submission_grade(request: HttpRequest, submission_id: int) -> HttpRe
     return render(request, "core/teacher_submission_grade.html", {"form": form, "submission": submission})
 
 
-# ---- Student Dashboard ----
+#  Student Dashboard 
 @login_required
 def student_dashboard(request: HttpRequest) -> HttpResponse:
     user: User = request.user  # type: ignore[assignment]
@@ -604,7 +609,7 @@ def student_dashboard(request: HttpRequest) -> HttpResponse:
         {"classroom": classroom, "courses": courses, "q": q, "upcoming_deadlines": upcoming_deadlines},
     )
 
-
+#Course details
 @login_required
 def student_course_detail(request: HttpRequest, course_id: int) -> HttpResponse:
     user: User = request.user  # type: ignore[assignment]
@@ -656,7 +661,7 @@ def student_material_detail(request: HttpRequest, material_id: int) -> HttpRespo
         "classroom": material.course.classroom,
     })
 
-
+#task details
 @login_required
 @require_http_methods(["GET", "POST"])
 def student_task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
@@ -735,7 +740,7 @@ def student_task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
 #         "course": task.course,
 #         "classroom": task.course.classroom,
 #     })
-
+#Student portfolio display
 @login_required
 def student_portfolio(request: HttpRequest) -> HttpResponse:
     user: User = request.user  # type: ignore[assignment]
@@ -750,88 +755,6 @@ def student_portfolio(request: HttpRequest) -> HttpResponse:
     return render(request, "core/student_portfolio.html", {"submissions": submissions})
 
 #Downloading portfolio
-# @login_required
-# def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
-#     user: User = request.user  # type: ignore[assignment]
-#     if user.role != User.Roles.STUDENT:
-#         return _redirect_for_role(user)
-
-#     from io import BytesIO
-#     from reportlab.lib.pagesizes import letter
-#     from reportlab.pdfgen import canvas
-
-#     submissions = (
-#         TaskSubmission.objects.select_related("task", "task__course", "task__course__classroom")
-#         .filter(submitted_by=user)
-#         .order_by("task__course__name", "task__title")
-#     )
-
-#     buffer = BytesIO()
-#     c = canvas.Canvas(buffer, pagesize=letter)
-#     width, height = letter
-
-#     y = height - 72
-#     c.setFont("Helvetica-Bold", 16)
-#     c.drawString(72, y, "LearnLab – Student Portfolio")
-#     y -= 22
-#     c.setFont("Helvetica", 12)
-#     c.drawString(72, y, f"Student: {user.get_full_name() or user.username}")
-#     y -= 28
-
-#     c.setFont("Helvetica-Bold", 12)
-#     c.drawString(72, y, "Completed work (submitted tasks/projects)")
-#     y -= 18
-#     c.setFont("Helvetica", 10)
-
-#     for s in submissions:
-#         grade_text = ""
-#         if s.task.is_graded and s.grade is not None:
-#             if s.task.grading_mode == "PERCENTAGE":
-#                 grade_text = f" · grade {s.grade} / 100%"
-#             else:
-#                 grade_text = f" · grade {s.grade} / {s.task.max_score}"
-
-#         link_text = f" · link: {s.link}" if s.link else ""
-
-#         base_line = (
-#             f"- {s.task.title} ({s.task.get_task_type_display()}) · "
-#             f"{s.task.course.name} · submitted {s.submitted_at.strftime('%Y-%m-%d')}{grade_text}{link_text}"
-#         )
-
-#         if y < 72:
-#             c.showPage()
-#             y = height - 72
-#             c.setFont("Helvetica", 10)
-#         c.drawString(72, y, base_line[:120])
-#         y -= 14
-
-#         if s.skills_gained:
-#             skills = [x.strip() for x in s.skills_gained.splitlines() if x.strip()]
-#             if skills:
-#                 if y < 72:
-#                     c.showPage()
-#                     y = height - 72
-#                     c.setFont("Helvetica", 10)
-#                 c.drawString(80, y, "Skills:")
-#                 y -= 12
-#                 c.setFont("Helvetica", 9)
-#                 for skill in skills[:8]:
-#                     if y < 72:
-#                         c.showPage()
-#                         y = height - 72
-#                         c.setFont("Helvetica", 9)
-#                     c.drawString(92, y, f"- {skill}"[:95])
-#                     y -= 11
-#                 c.setFont("Helvetica", 10)
-
-#     c.showPage()
-#     c.save()
-#     buffer.seek(0)
-
-#     from django.http import FileResponse
-
-#     filename = f"learnlab_portfolio_{user.username}.pdf"
-#     return FileResponse(buffer, as_attachment=True, filename=filename)
 @login_required
 def student_portfolio_pdf(request: HttpRequest) -> HttpResponse:
     user: User = request.user  # type: ignore[assignment]
