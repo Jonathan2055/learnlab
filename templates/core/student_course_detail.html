@@ -109,10 +109,13 @@
                                 <td>{% if t.is_group_task %}Group{% else %}Individual{% endif %}</td>
                                 <td>{{ t.due_date|date:"M j, Y"|default:"—" }}</td>
                                 <td>
-                                    {% if s %}Submitted{% else %}Not submitted{% endif %}
-                                    {% if t.is_graded and s and s.grade != None %} · Graded{% endif %}
+                                        {% if s %}
+                                        <span class="badge-success">✓ Submitted{% if t.is_graded and s.grade != None %} · Graded{% endif %}</span>
+                                        {% else %}
+                                        <a href="{% url 'student_task_detail' t.pk %}" class="btn btn-primary btn-sm">Submit</a>
+                                        {% endif %}
                                 </td>
-                            </tr>
+                                <tr>
                             {% endwith %}
                         {% empty %}
                             <tr><td colspan="5" class="text-muted">No tasks yet.</td></tr>
