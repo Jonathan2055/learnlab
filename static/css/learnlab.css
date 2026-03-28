@@ -691,3 +691,11 @@ button {
   box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.15);
 }
 
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
