@@ -33,7 +33,8 @@ urlpatterns = [
     path("teacher/tasks/<int:task_id>/delete/", views.teacher_task_delete, name="teacher_task_delete"),
     path("teacher/tasks/<int:task_id>/groups/create/", views.teacher_task_group_create, name="teacher_task_group_create"),
     path("teacher/submissions/<int:submission_id>/grade/", views.teacher_submission_grade, name="teacher_submission_grade"),
-    # path("student/submissions/<int:submission_id>/edit/", views.student_submission_edit, name="student_submission_edit"),
+    path("teacher/portfolios/", views.teacher_portfolio_list, name="teacher_portfolio_list"),
+    path("teacher/portfolios/<int:student_id>/", views.teacher_student_portfolio, name="teacher_student_portfolio"),
     #submission testing
     path("teacher/submissions/<int:submission_id>/", views.teacher_submission_detail, name="teacher_submission_detail"),
     # Student

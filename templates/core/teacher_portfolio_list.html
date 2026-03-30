@@ -1,0 +1,85 @@
+{% extends "core/base.html" %}
+
+{% block title %}Student Portfolios{% endblock %}
+{% block body_class %}page-dashboard page-dashboard-teacher{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo-circle">🎓</span>
+            <span class="sidebar-title">LearnLab</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'teacher_dashboard' %}" class="sidebar-link">Dashboard</a>
+            <a href="{% url 'teacher_portfolio_list' %}" class="sidebar-link sidebar-link-active">Portfolios</a>
+        </nav>
+        <div class="sidebar-footer">
+            <span class="sidebar-user">{{ request.user.get_full_name|default:request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="sidebar-logout">Log out</a>
+        </div>
+    </aside>
+
+    <main class="dashboard-main">
+        <header class="dashboard-header">
+            <a href="{% url 'teacher_dashboard' %}" class="back-link">← Back to Dashboard</a>
+            <h1>Student Portfolios</h1>
+            <p>View and browse your students' submitted work</p>
+        </header>
+
+        <form method="get" class="search-row">
+            <input class="search-input" type="text" name="q" value="{{ q }}" placeholder="Search by name or email…">
+            <button class="btn btn-secondary" type="submit">Search</button>
+            {% if q %}
+                <a class="btn btn-secondary" href="{% url 'teacher_portfolio_list' %}">Clear</a>
+            {% endif %}
+        </form>
+
+        <section class="card">
+            <h2>👥 Your Students ({{ students|length }})</h2>
+            {% if students %}
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Email</th>
+                                <th>Class</th>
+                                <th>Submissions</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in students %}
+                            <tr>
+                                <td>
+                                    <strong>{{ s.get_full_name|default:s.username }}</strong>
+                                </td>
+                                <td class="text-muted">{{ s.email }}</td>
+                                <td>{{ s.student_class.name|default:"—" }}</td>
+                                <td>
+                                    {% if s.submission_count > 0 %}
+                                        <span class="badge-success">{{ s.submission_count }} submission{{ s.submission_count|pluralize }}</span>
+                                    {% else %}
+                                        <span class="text-muted">None yet</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'teacher_student_portfolio' s.pk %}" class="btn btn-primary btn-sm">
+                                        View Portfolio
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">
+                    {% if q %}No students found matching "{{ q }}".{% else %}No students in your classrooms yet.{% endif %}
+                </p>
+            {% endif %}
+        </section>
+    </main>
+</div>
+{% endblock %}

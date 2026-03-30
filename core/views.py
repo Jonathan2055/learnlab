@@ -8,6 +8,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django.db import models
 
 from .forms import (
     AdminUserCreationForm,
@@ -571,7 +572,72 @@ def teacher_submission_grade(request: HttpRequest, submission_id: int) -> HttpRe
     else:
         form = SubmissionFeedbackForm(instance=submission)
     return render(request, "core/teacher_submission_grade.html", {"form": form, "submission": submission})
+# Teacher views all students' portfolios
+@login_required
+@_require_teacher
+def teacher_portfolio_list(request: HttpRequest) -> HttpResponse:
+    teacher = request.user
+    classrooms = Classroom.objects.filter(teachers=teacher)
+    q = (request.GET.get("q") or "").strip()
+    
+    students = User.objects.filter(
+        role=User.Roles.STUDENT,
+        student_class__in=classrooms
+    ).order_by("username")
+    
+    if q:
+        students = students.filter(
+            models.Q(username__icontains=q) |
+            models.Q(first_name__icontains=q) |
+            models.Q(last_name__icontains=q) |
+            models.Q(email__icontains=q)
+        )
 
+    # Annotate each student with submission count
+    from django.db.models import Count
+    students = students.annotate(submission_count=Count("submissions"))
+
+    return render(request, "core/teacher_portfolio_list.html", {
+        "students": students,
+        "classrooms": classrooms,
+        "q": q,
+    })
+
+
+# Teacher views a specific student's portfolio
+@login_required
+@_require_teacher
+def teacher_student_portfolio(request: HttpRequest, student_id: int) -> HttpResponse:
+    teacher = request.user
+    student = get_object_or_404(User, pk=student_id, role=User.Roles.STUDENT)
+
+    # Ensure student is in one of this teacher's classrooms
+    teacher_classrooms = Classroom.objects.filter(teachers=teacher)
+    if not teacher_classrooms.filter(pk=student.student_class_id).exists():
+        messages.error(request, "You do not have access to this student.")
+        return redirect("teacher_portfolio_list")
+
+    submissions = (
+        TaskSubmission.objects.select_related("task", "task__course", "task__course__classroom")
+        .filter(submitted_by=student)
+        .order_by("-submitted_at")
+    )
+
+    # Stats
+    total = submissions.count()
+    graded = submissions.exclude(grade=None)
+    avg_grade = None
+    if graded.exists():
+        avg_grade = round(sum(s.grade for s in graded) / graded.count(), 1)
+
+    return render(request, "core/teacher_student_portfolio.html", {
+        "student": student,
+        "classroom": student.student_class,
+        "submissions": submissions,
+        "total": total,
+        "graded_count": graded.count(),
+        "avg_grade": avg_grade,
+    })
 
 #  Student Dashboard 
 @login_required
@@ -708,38 +774,6 @@ def student_task_detail(request: HttpRequest, task_id: int) -> HttpResponse:
         {"task": task, "course": task.course, "classroom": task.course.classroom, "form": form, "existing": existing, "group": group},
     )
 
-#edit student submission grades
-# @login_required
-# @require_http_methods(["GET", "POST"])
-# def student_submission_edit(request: HttpRequest, submission_id: int) -> HttpResponse:
-#     user: User = request.user  # type: ignore[assignment]
-#     if user.role != User.Roles.STUDENT:
-#         return _redirect_for_role(user)
-
-#     submission = get_object_or_404(TaskSubmission, pk=submission_id, submitted_by=user)
-#     task = submission.task
-
-#     # Block edit if already graded
-#     if submission.grade is not None:
-#         messages.error(request, "You cannot edit a submission that has already been graded.")
-#         return redirect("student_task_detail", task_id=task.pk)
-
-#     if request.method == "POST":
-#         form = TaskSubmissionForm(request.POST, request.FILES, instance=submission)
-#         if form.is_valid():
-#             form.save()
-#             messages.success(request, "Submission updated.")
-#             return redirect("student_task_detail", task_id=task.pk)
-#     else:
-#         form = TaskSubmissionForm(instance=submission)
-
-#     return render(request, "core/student_submission_edit.html", {
-#         "form": form,
-#         "submission": submission,
-#         "task": task,
-#         "course": task.course,
-#         "classroom": task.course.classroom,
-#     })
 #Student portfolio display
 @login_required
 def student_portfolio(request: HttpRequest) -> HttpResponse:

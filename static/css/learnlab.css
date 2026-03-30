@@ -699,3 +699,169 @@ button {
     font-size: 12px;
     font-weight: 500;
 }
+
+/*Form styling used in templates */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+}
+
+.form-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.01em;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.65rem 0.95rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #ffffff;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Custom arrow for select */
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+.form-textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+/* form-fields wrapper used in task submission */
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* form-row used in modals side-by-side fields */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* form-help text */
+.form-help {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+
+/* field-level error */
+.field-error {
+  font-size: 0.78rem;
+  color: #b91c1c;
+  margin-top: 0.15rem;
+}
+
+/* select that Django renders without class */
+select:not([class]) {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.65rem 2.5rem 0.65rem 0.95rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #0f172a;
+  background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 0.85rem center;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+select:not([class]):focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background-color: #ffffff;
+}
+
+/*  catch bare input and textarea without class */
+input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="file"]) {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.65rem 0.95rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="file"]):focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #ffffff;
+}
+
+textarea:not([class]) {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  padding: 0.65rem 0.95rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #0f172a;
+  background: #f8fafc;
+  outline: none;
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.6;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+textarea:not([class]):focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #ffffff;
+}
+
+/* File input */
+input[type="file"] {
+  font-size: 0.85rem;
+  color: #64748b;
+  padding: 0.4rem 0;
+}
