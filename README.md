@@ -22,21 +22,25 @@ on linux:
 source .venv/bin/activate
 ```
 on windows:
+
 (in command prompt)
 ``` bash
 venv\Scripts\activate.bat
 ```
+(in Powershell)
 ```bash
 .\venv\Scripts\Activate.ps1
 ```
+Install requirements
 ```bash
 pip install -r requirements.txt
-python3 manage.py migrate
-
-# create an initial admin (superuser) But no need because down there is some demo data I have created.
+```
+Create an initial admin (superuser) But no need because down there is some demo data I have created.
+```bash
 python3 manage.py createsuperuser
-
-# run the dev server
+```
+run the dev server
+```bash
 python3 manage.py runserver
 ```
 
